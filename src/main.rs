@@ -32,7 +32,7 @@ fn main() {
         .add_system(update_clip_shpere_system::<FlyCam>)
         .add_system(chunk_generate_system)
         // 这个会使性能严重下降
-        // .add_system(deleter_mesh_system)
+        .add_system(deleter_mesh_system)
         .add_system(update_mesh_system)
         .run();
 }

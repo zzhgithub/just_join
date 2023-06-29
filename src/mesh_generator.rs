@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use bevy::{
     prelude::{
         Assets, Color, Commands, Entity, Mesh, PbrBundle, Res, ResMut, Resource, StandardMaterial,
@@ -17,6 +19,7 @@ use crate::{
 #[derive(Debug, Clone, Resource, Default)]
 pub struct MeshManager {
     pub entities: SmallKeyHashMap<ChunkKey, Entity>,
+    // pub fast_key: HashSet<ChunkKey>,
 }
 
 pub fn update_mesh_system(
@@ -38,6 +41,7 @@ pub fn update_mesh_system(
                 return;
             };
             let render_mesh = gen_mesh(volexs.to_owned()).unwrap();
+            // mesh_manager.fast_key.remove(&key);
             mesh_manager.entities.insert(
                 key,
                 commands
@@ -56,19 +60,33 @@ pub fn update_mesh_system(
             );
         }
     }
+    // for chunk_key in mesh_manager.fast_key.drain() {
+    //     if let Some(entity) = mesh_manager.entities.remove(&chunk_key) {
+    //         commands.entity(entity).despawn();
+    //     }
+    // }
+    // for &chunk_key in mesh_manager.entities.keys() {
+    //     mesh_manager.fast_key.insert(chunk_key.clone());
+    // }
 }
 
 pub fn deleter_mesh_system(
     mut commands: Commands,
     mut mesh_manager: ResMut<MeshManager>,
+    neighbour_offest: Res<NeighbourOffest>,
     clip_spheres: Res<ClipSpheres>,
 ) {
-    let mut chunks_to_remove = Vec::new();
-    for &key in mesh_manager.entities.keys() {
-        let dst = clip_spheres.new_sphere.center.distance(key.0.as_vec3());
-        if (dst * CHUNK_SIZE as f32 > VIEW_RADIUS) {
-            chunks_to_remove.push(key);
-        }
+    let mut chunks_to_remove = HashSet::new();
+    for key in find_chunk_keys_array_by_shpere(clip_spheres.old_sphere, neighbour_offest.0.clone())
+        .drain(..)
+    {
+        chunks_to_remove.insert(key);
+    }
+
+    for key in find_chunk_keys_array_by_shpere(clip_spheres.new_sphere, neighbour_offest.0.clone())
+        .drain(..)
+    {
+        chunks_to_remove.remove(&key);
     }
 
     for chunk_key in chunks_to_remove.into_iter() {
