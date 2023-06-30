@@ -7,17 +7,17 @@ use chunk::generate_offset_resoure;
 use chunk_generator::{chunk_generate_system, ChunkMap};
 use clip_spheres::{update_clip_shpere_system, ClipSpheres, Sphere3};
 use inspector_egui::inspector_ui;
-use mesh_generator::{deleter_mesh_system, update_mesh_system, MeshManager};
+use mesh_generator::{deleter_mesh_system, update_mesh_system, MeshManager, MeshTasks};
 
 use bevy_egui::EguiPlugin;
 
 mod chunk;
 mod chunk_generator;
 mod clip_spheres;
+mod inspector_egui;
 mod mesh;
 mod mesh_generator;
 mod voxel;
-mod inspector_egui;
 
 pub type SmallKeyHashMap<K, V> = ahash::AHashMap<K, V>;
 
@@ -44,7 +44,6 @@ fn main() {
         .run();
 }
 
-
 fn setup(mut commands: Commands) {
     // init resource of clip Spheres
     let eye = Vec3::ZERO;
@@ -67,6 +66,9 @@ fn setup(mut commands: Commands) {
 
     // init MeshManager
     commands.insert_resource(MeshManager::default());
+
+    // init MeshTasks
+    commands.insert_resource(MeshTasks { tasks: Vec::new() });
 
     // 设置光源
     commands.spawn(PointLightBundle {

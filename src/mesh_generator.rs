@@ -13,6 +13,7 @@ use crate::{
     chunk_generator::ChunkMap,
     clip_spheres::ClipSpheres,
     mesh::gen_mesh,
+    voxel::Voxel,
     SmallKeyHashMap, CHUNK_SIZE, VIEW_RADIUS,
 };
 
@@ -20,6 +21,11 @@ use crate::{
 pub struct MeshManager {
     pub entities: SmallKeyHashMap<ChunkKey, Entity>,
     // pub fast_key: HashSet<ChunkKey>,
+}
+
+#[derive(Debug, Resource)]
+pub struct MeshTasks {
+    pub tasks: Vec<Task<(ChunkKey, Mesh)>>,
 }
 
 pub fn update_mesh_system(
@@ -30,7 +36,29 @@ pub fn update_mesh_system(
     neighbour_offest: Res<NeighbourOffest>,
     mut mesh_assets: ResMut<Assets<Mesh>>,
     mut material_assets: ResMut<Assets<StandardMaterial>>,
+    mut mesh_task: ResMut<MeshTasks>,
 ) {
+    let pool = AsyncComputeTaskPool::get();
+    for ele in mesh_task.tasks.drain(..) {
+        let (chunk_key, mesh) = futures_lite::future::block_on(ele);
+        mesh_manager.entities.insert(
+            chunk_key,
+            commands
+                .spawn(PbrBundle {
+                    transform: Transform::from_xyz(
+                        (chunk_key.0.x * CHUNK_SIZE) as f32,
+                        (chunk_key.0.y * CHUNK_SIZE) as f32,
+                        (chunk_key.0.z * CHUNK_SIZE) as f32,
+                    ),
+                    mesh: mesh_assets.add(mesh),
+                    material: material_assets
+                        .add(StandardMaterial::from(Color::rgb(1.0, 0.0, 0.0))),
+                    ..Default::default()
+                })
+                .id(),
+        );
+    }
+
     for key in find_chunk_keys_array_by_shpere(clip_spheres.new_sphere, neighbour_offest.0.clone())
         .drain(..)
     {
@@ -42,23 +70,8 @@ pub fn update_mesh_system(
                 return;
             };
             let render_mesh = gen_mesh(volexs.to_owned()).unwrap();
-            // mesh_manager.fast_key.remove(&key);
-            mesh_manager.entities.insert(
-                key,
-                commands
-                    .spawn(PbrBundle {
-                        transform: Transform::from_xyz(
-                            (key.0.x * CHUNK_SIZE) as f32,
-                            (key.0.y * CHUNK_SIZE) as f32,
-                            (key.0.z * CHUNK_SIZE) as f32,
-                        ),
-                        mesh: mesh_assets.add(render_mesh),
-                        material: material_assets
-                            .add(StandardMaterial::from(Color::rgb(1.0, 0.0, 0.0))),
-                        ..Default::default()
-                    })
-                    .id(),
-            );
+            let task = pool.spawn(async move { (key, render_mesh) });
+            mesh_task.tasks.push(task);
         }
     }
 }
