@@ -2,7 +2,7 @@ use bevy::prelude::{Res, ResMut, Resource};
 use ndshape::{ConstShape, ConstShape3u32};
 
 use crate::{
-    chunk::{find_chunk_keys_by_shpere, ChunkKey, NeighbourOffest},
+    chunk::{find_chunk_keys_by_shpere, generate_offset_array, ChunkKey, NeighbourOffest},
     clip_spheres::{self, ClipSpheres},
     voxel::Voxel,
     SmallKeyHashMap,
@@ -39,12 +39,6 @@ impl ChunkMap {
 
     pub fn get(&self, key: ChunkKey) -> Option<&Vec<Voxel>> {
         self.map_data.get(&key)
-    }
-
-    pub fn get_with_neighbour(&self, key: ChunkKey) -> Option<&Vec<Voxel>> {
-        // 获取 全部数据
-        // 然后生成中心点的四周的数据 这个怎么去取形状最后转换成 数组呢？
-        None
     }
 
     pub fn write_chunk(&mut self, chunk_key: ChunkKey, item: Vec<Voxel>) {

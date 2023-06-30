@@ -8,15 +8,15 @@ use ndshape::{ConstShape, ConstShape3u32};
 use crate::{voxel::Voxel, CHUNK_SIZE};
 
 pub fn gen_mesh(voxels: Vec<Voxel>) -> Option<Mesh> {
-    type SampleShape = ConstShape3u32<16, 16, 16>;
+    type SampleShape = ConstShape3u32<18, 18, 18>;
     let mut buffer = GreedyQuadsBuffer::new(SampleShape::SIZE as usize);
     let faces: [block_mesh::OrientedBlockFace; 6] = RIGHT_HANDED_Y_UP_CONFIG.faces;
-
+    let padding_voxels = padding_extents(voxels);
     greedy_quads(
-        &voxels,
+        &padding_voxels,
         &SampleShape {},
         [0; 3],
-        [(CHUNK_SIZE - 1) as u32; 3],
+        [(CHUNK_SIZE + 1) as u32; 3],
         &faces,
         &mut buffer,
     );
@@ -52,4 +52,23 @@ pub fn gen_mesh(voxels: Vec<Voxel>) -> Option<Mesh> {
     render_mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, tex_coords);
     render_mesh.set_indices(Some(Indices::U32(indices)));
     Some(render_mesh)
+}
+
+pub fn padding_extents(voxels: Vec<Voxel>) -> Vec<Voxel> {
+    // 给数据加上Empty的边界
+    type SampleShape = ConstShape3u32<18, 18, 18>;
+    type DataShape = ConstShape3u32<16, 16, 16>;
+    let chunk_size_u32 = CHUNK_SIZE as u32;
+    let mut result = Vec::new();
+    for i in 0..SampleShape::SIZE {
+        let [x, y, z] = SampleShape::delinearize(i);
+        if x < 1 || y < 1 || z < 1 || x > chunk_size_u32 || y > chunk_size_u32 || z > chunk_size_u32
+        {
+            result.push(Voxel::EMPTY);
+        } else {
+            let index = DataShape::linearize([x - 1, y - 1, z - 1]);
+            result.push(voxels[index as usize]);
+        }
+    }
+    return result;
 }
