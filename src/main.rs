@@ -7,6 +7,7 @@ use chunk::generate_offset_resoure;
 use chunk_generator::{chunk_generate_system, ChunkMap};
 use clip_spheres::{update_clip_shpere_system, ClipSpheres, Sphere3};
 use inspector_egui::inspector_ui;
+use map_database::MapDataBase;
 use mesh_generator::{deleter_mesh_system, update_mesh_system, MeshManager, MeshTasks};
 
 use bevy_egui::EguiPlugin;
@@ -15,6 +16,7 @@ mod chunk;
 mod chunk_generator;
 mod clip_spheres;
 mod inspector_egui;
+mod map_database;
 mod mesh;
 mod mesh_generator;
 mod voxel;
@@ -70,9 +72,15 @@ fn setup(mut commands: Commands) {
     // init MeshTasks
     commands.insert_resource(MeshTasks { tasks: Vec::new() });
 
+    // init MapData
+    let mut db = MapDataBase::new("world_test");
+    db.test_gen();
+
+    commands.insert_resource(db);
+
     // 设置光源
     commands.spawn(PointLightBundle {
-        transform: Transform::from_translation(Vec3::new(0.0, 500.0, 0.0)),
+        transform: Transform::from_translation(Vec3::new(0.0, 200.0, 0.0)),
         ..Default::default()
     });
 }

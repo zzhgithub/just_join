@@ -1,9 +1,24 @@
+use std::{
+    collections::hash_map::DefaultHasher,
+    hash::{Hash, Hasher},
+};
+
 use bevy::prelude::{IVec3, Resource};
 
 use crate::{clip_spheres::Sphere3, CHUNK_SIZE};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ChunkKey(pub IVec3);
+
+impl ChunkKey {
+    pub fn as_u8_array(&self) -> [u8; 8] {
+        let mut hasher = DefaultHasher::new();
+        self.0.hash(&mut hasher);
+        let hash_value = hasher.finish();
+        let hash_bytes: [u8; 8] = unsafe { std::mem::transmute(hash_value) };
+        return hash_bytes;
+    }
+}
 
 // 这个方法用于生成必要的偏移量
 pub fn generate_offset_array(chunk_distance: i32) -> Vec<IVec3> {

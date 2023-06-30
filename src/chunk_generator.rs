@@ -5,6 +5,7 @@ use ndshape::{ConstShape, ConstShape3u32};
 use crate::{
     chunk::{find_chunk_keys_by_shpere, generate_offset_array, ChunkKey, NeighbourOffest},
     clip_spheres::{self, ClipSpheres},
+    map_database::MapDataBase,
     voxel::Voxel,
     SmallKeyHashMap,
 };
@@ -125,13 +126,15 @@ pub fn chunk_generate_system(
     mut chunk_map: ResMut<ChunkMap>,
     neighbour_offest: Res<NeighbourOffest>,
     clip_spheres: Res<ClipSpheres>,
+    mut db: ResMut<MapDataBase>,
 ) {
     find_chunk_keys_by_shpere(
         clip_spheres.new_sphere,
         neighbour_offest.0.clone(),
         move |key| {
             // 这里要判断一下获取的方法
-            chunk_map.gen_chunk_data(key);
+            // chunk_map.gen_chunk_data(key);
+            chunk_map.write_chunk(key, db.find_by_chunk_key(key));
         },
     );
 }

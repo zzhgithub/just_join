@@ -20,7 +20,7 @@ use crate::{
 #[derive(Debug, Clone, Resource, Default)]
 pub struct MeshManager {
     pub entities: SmallKeyHashMap<ChunkKey, Entity>,
-    // pub fast_key: HashSet<ChunkKey>,
+    pub fast_key: HashSet<ChunkKey>,
 }
 
 #[derive(Debug, Resource)]
@@ -62,16 +62,22 @@ pub fn update_mesh_system(
     for key in find_chunk_keys_array_by_shpere(clip_spheres.new_sphere, neighbour_offest.0.clone())
         .drain(..)
     {
-        if !mesh_manager.entities.contains_key(&key) {
+        if !mesh_manager.entities.contains_key(&key) && !mesh_manager.fast_key.contains(&key) {
             // fixme: 这里需要一个很好的加载周围的算法！
             let volexs = if let Some(v) = chunk_map.get(key) {
                 v
             } else {
                 return;
             };
-            let render_mesh = gen_mesh(volexs.to_owned()).unwrap();
-            let task = pool.spawn(async move { (key, render_mesh) });
-            mesh_task.tasks.push(task);
+            // 无论如何都插入进去 放置下次重复检查
+            mesh_manager.fast_key.insert(key);
+            match gen_mesh(volexs.to_owned()) {
+                Some(render_mesh) => {
+                    let task = pool.spawn(async move { (key, render_mesh) });
+                    mesh_task.tasks.push(task);
+                }
+                None => {}
+            }
         }
     }
 }
@@ -97,6 +103,7 @@ pub fn deleter_mesh_system(
 
     for chunk_key in chunks_to_remove.into_iter() {
         if let Some(entity) = mesh_manager.entities.remove(&chunk_key) {
+            mesh_manager.fast_key.remove(&chunk_key);
             commands.entity(entity).despawn();
         }
     }

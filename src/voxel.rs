@@ -1,6 +1,7 @@
 use block_mesh::{MergeVoxel, Voxel as MeshVoxel, VoxelVisibility};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, Deserialize, Serialize)]
 pub struct Voxel {
     id: u8,
 }

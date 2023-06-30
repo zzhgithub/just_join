@@ -22,6 +22,9 @@ pub fn gen_mesh(voxels: Vec<Voxel>) -> Option<Mesh> {
     );
     let num_indices = buffer.quads.num_quads() * 6;
     let num_vertices = buffer.quads.num_quads() * 4;
+    if num_indices == 0 {
+        return None;
+    }
     let mut indices = Vec::with_capacity(num_indices);
     let mut positions = Vec::with_capacity(num_vertices);
     let mut normals = Vec::with_capacity(num_vertices);
