@@ -35,6 +35,7 @@ pub fn update_mesh_system(
         .drain(..)
     {
         if !mesh_manager.entities.contains_key(&key) {
+            // fixme: 这里需要一个很好的加载周围的算法！
             let volexs = if let Some(v) = chunk_map.get(key) {
                 v
             } else {
@@ -60,14 +61,6 @@ pub fn update_mesh_system(
             );
         }
     }
-    // for chunk_key in mesh_manager.fast_key.drain() {
-    //     if let Some(entity) = mesh_manager.entities.remove(&chunk_key) {
-    //         commands.entity(entity).despawn();
-    //     }
-    // }
-    // for &chunk_key in mesh_manager.entities.keys() {
-    //     mesh_manager.fast_key.insert(chunk_key.clone());
-    // }
 }
 
 pub fn deleter_mesh_system(
