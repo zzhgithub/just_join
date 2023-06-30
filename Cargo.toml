@@ -12,3 +12,5 @@ ndshape = "0.3.0"
 ahash = { version = "0.7", features = ["serde"] }
 futures-lite = "1.13.0"
 bevy_flycam = "0.10.1"
+bevy-inspector-egui = "0.18.3"
+bevy_egui = "0.20.3"

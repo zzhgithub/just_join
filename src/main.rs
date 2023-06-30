@@ -6,7 +6,10 @@ use bevy_flycam::{FlyCam, PlayerPlugin};
 use chunk::generate_offset_resoure;
 use chunk_generator::{chunk_generate_system, ChunkMap};
 use clip_spheres::{update_clip_shpere_system, ClipSpheres, Sphere3};
+use inspector_egui::inspector_ui;
 use mesh_generator::{deleter_mesh_system, update_mesh_system, MeshManager};
+
+use bevy_egui::EguiPlugin;
 
 mod chunk;
 mod chunk_generator;
@@ -14,6 +17,7 @@ mod clip_spheres;
 mod mesh;
 mod mesh_generator;
 mod voxel;
+mod inspector_egui;
 
 pub type SmallKeyHashMap<K, V> = ahash::AHashMap<K, V>;
 
@@ -29,6 +33,9 @@ fn main() {
         .add_startup_system(setup)
         .add_plugins(DefaultPlugins)
         .add_plugin(PlayerPlugin)
+        .add_plugin(EguiPlugin)
+        .add_plugin(bevy_inspector_egui::DefaultInspectorConfigPlugin) // adds default options and `InspectorEguiImpl`s
+        .add_system(inspector_ui)
         .add_system(update_clip_shpere_system::<FlyCam>)
         .add_system(chunk_generate_system)
         // 这个会使性能严重下降
@@ -36,6 +43,7 @@ fn main() {
         .add_system(update_mesh_system)
         .run();
 }
+
 
 fn setup(mut commands: Commands) {
     // init resource of clip Spheres
