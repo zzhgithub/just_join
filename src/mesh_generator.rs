@@ -30,7 +30,7 @@ pub struct MeshTasks {
 
 pub fn update_mesh_system(
     mut commands: Commands,
-    chunk_map: Res<ChunkMap>,
+    mut chunk_map: ResMut<ChunkMap>,
     mut mesh_manager: ResMut<MeshManager>,
     clip_spheres: Res<ClipSpheres>,
     neighbour_offest: Res<NeighbourOffest>,

@@ -11,7 +11,7 @@
 ## 通过新老的圆的位置知道要更新位置
 这里就根据距离查询偏移的量的函数`generate_offset_array`这函数可以根据chunk的相距个数生成一组chunkKey的偏移量
 其中chunkKey是chunk中最小的点[i32;3]就可以表示
-
+d
 ChunkKey (x,y,z)/16 取整数 即可。
 ### 现阶段的问题
 1. 生成的mesh是不正确的！需要在获取到`Vec<Voexl>`的方法中实现获取带一个pad的方法
