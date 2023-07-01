@@ -6,7 +6,7 @@ use bevy::prelude::{IVec3, Resource};
 use ndshape::{ConstShape, ConstShape3u32};
 use sled::Db;
 
-use crate::{chunk::ChunkKey, voxel::Voxel};
+use crate::{chunk::ChunkKey, map_generator::gen_chunk_data_by_seed, voxel::Voxel};
 
 #[derive(Resource)]
 pub struct MapDataBase {
@@ -29,7 +29,8 @@ impl MapDataBase {
         return match self.db.get(key) {
             Ok(rs) => match rs {
                 Some(data) => bincode::deserialize(&data).unwrap(),
-                None => voxels,
+                // 这里在没有获取到的情况下使用算法的值
+                None => gen_chunk_data_by_seed(0, chunk_key),
             },
             Err(e) => {
                 println!("wrong, to get Map");

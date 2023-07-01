@@ -73,6 +73,10 @@ pub fn update_mesh_system(
             // } else {
             //     return;
             // };
+            if (!chunk_map.map_data.contains_key(&key)) {
+                // 这里没有加载好地图数据前 先不加载数据
+                return;
+            }
             // 无论如何都插入进去 放置下次重复检查
             mesh_manager.fast_key.insert(key);
             let volexs = chunk_map.get_with_neighbor(key);

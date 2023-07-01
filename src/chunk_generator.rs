@@ -54,9 +54,9 @@ impl ChunkMap {
         }
     }
 
-    // 下面的代码 是有问题的！！！
-    // BUG 不能正确的生成数据
+
     pub fn get_with_neighbor(&mut self, chunk_key: ChunkKey) -> Vec<Voxel> {
+        // 有种可能 这里的数据还没有加载好 就先去获取了
         let voxels = self.get(chunk_key);
         // 这个是最核心的 数据
         type SampleShape = ConstShape3u32<18, 18, 18>;

@@ -1,5 +1,7 @@
 use bevy::{
-    prelude::{bevy_main, App, Commands, PointLightBundle, Transform, Vec3},
+    prelude::{
+        bevy_main, App, Commands, IntoSystemConfig, PointLightBundle, SystemSet, Transform, Vec3,
+    },
     DefaultPlugins,
 };
 use bevy_flycam::{FlyCam, PlayerPlugin};
@@ -17,6 +19,7 @@ mod chunk_generator;
 mod clip_spheres;
 mod inspector_egui;
 mod map_database;
+mod map_generator;
 mod mesh;
 mod mesh_generator;
 mod voxel;
@@ -40,11 +43,13 @@ fn main() {
         .add_system(inspector_ui)
         .add_system(update_clip_shpere_system::<FlyCam>)
         .add_system(chunk_generate_system)
-        // 这个会使性能严重下降
         .add_system(deleter_mesh_system)
         .add_system(update_mesh_system)
         .run();
 }
+
+#[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
+struct ChunkFlush;
 
 fn setup(mut commands: Commands) {
     // init resource of clip Spheres
@@ -74,7 +79,7 @@ fn setup(mut commands: Commands) {
 
     // init MapData
     let mut db = MapDataBase::new("world_test");
-    db.test_gen();
+    // db.test_gen();
 
     commands.insert_resource(db);
 
