@@ -40,23 +40,27 @@ pub fn update_mesh_system(
 ) {
     let pool = AsyncComputeTaskPool::get();
     for ele in mesh_task.tasks.drain(..) {
-        let (chunk_key, mesh) = futures_lite::future::block_on(ele);
-        mesh_manager.entities.insert(
-            chunk_key,
-            commands
-                .spawn(PbrBundle {
-                    transform: Transform::from_xyz(
-                        (chunk_key.0.x * CHUNK_SIZE) as f32,
-                        (chunk_key.0.y * CHUNK_SIZE) as f32,
-                        (chunk_key.0.z * CHUNK_SIZE) as f32,
-                    ),
-                    mesh: mesh_assets.add(mesh),
-                    material: material_assets
-                        .add(StandardMaterial::from(Color::rgb(1.0, 0.0, 0.0))),
-                    ..Default::default()
-                })
-                .id(),
-        );
+        match futures_lite::future::block_on(futures_lite::future::poll_once(ele)) {
+            Some((chunk_key, mesh)) => {
+                mesh_manager.entities.insert(
+                    chunk_key,
+                    commands
+                        .spawn(PbrBundle {
+                            transform: Transform::from_xyz(
+                                (chunk_key.0.x * CHUNK_SIZE) as f32,
+                                (chunk_key.0.y * CHUNK_SIZE) as f32,
+                                (chunk_key.0.z * CHUNK_SIZE) as f32,
+                            ),
+                            mesh: mesh_assets.add(mesh),
+                            material: material_assets
+                                .add(StandardMaterial::from(Color::rgb(1.0, 0.0, 0.0))),
+                            ..Default::default()
+                        })
+                        .id(),
+                );
+            }
+            None => {}
+        }
     }
 
     for key in find_chunk_keys_array_by_shpere(clip_spheres.new_sphere, neighbour_offest.0.clone())
