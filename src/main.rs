@@ -1,6 +1,7 @@
 use bevy::{
     prelude::{
-        bevy_main, App, Commands, IntoSystemConfig, PointLightBundle, SystemSet, Transform, Vec3,
+        bevy_main, App, Commands, IntoSystemConfig, ParamSet, PointLight, PointLightBundle, Query,
+        SystemSet, Transform, Vec3, With, Without,
     },
     DefaultPlugins,
 };
@@ -45,6 +46,8 @@ fn main() {
         .add_system(chunk_generate_system)
         .add_system(deleter_mesh_system)
         .add_system(update_mesh_system)
+        // 测试时使用的光源跟随
+        .add_system(light_follow_camera_system)
         .run();
 }
 
@@ -84,8 +87,24 @@ fn setup(mut commands: Commands) {
     commands.insert_resource(db);
 
     // 设置光源
-    commands.spawn(PointLightBundle {
-        transform: Transform::from_translation(Vec3::new(0.0, 200.0, 0.0)),
-        ..Default::default()
-    });
+    commands.spawn(
+        (PointLightBundle {
+            transform: Transform::from_translation(Vec3::new(0.0, 10.0, 0.0)),
+            ..Default::default()
+        }),
+    );
+}
+
+fn light_follow_camera_system(
+    cam_q: Query<&Transform, With<FlyCam>>,
+    mut light_q: Query<&mut Transform, (With<PointLight>, Without<FlyCam>)>,
+) {
+    let camera_position = if let Some(tfm) = cam_q.iter().next() {
+        tfm.translation
+    } else {
+        return;
+    };
+    if let Some(mut tfm) = light_q.iter_mut().next() {
+        tfm.translation = camera_position;
+    }
 }

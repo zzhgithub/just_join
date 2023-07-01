@@ -30,7 +30,7 @@ impl MapDataBase {
             Ok(rs) => match rs {
                 Some(data) => bincode::deserialize(&data).unwrap(),
                 // 这里在没有获取到的情况下使用算法的值
-                None => gen_chunk_data_by_seed(0, chunk_key),
+                None => gen_chunk_data_by_seed(1515856, chunk_key),
             },
             Err(e) => {
                 println!("wrong, to get Map");
