@@ -11,9 +11,9 @@ pub fn gen_mesh(voxels: Vec<Voxel>) -> Option<Mesh> {
     type SampleShape = ConstShape3u32<18, 18, 18>;
     let mut buffer = GreedyQuadsBuffer::new(SampleShape::SIZE as usize);
     let faces: [block_mesh::OrientedBlockFace; 6] = RIGHT_HANDED_Y_UP_CONFIG.faces;
-    let padding_voxels = padding_extents(voxels);
+    // let padding_voxels = padding_extents(voxels);
     greedy_quads(
-        &padding_voxels,
+        &voxels,
         &SampleShape {},
         [0; 3],
         [(CHUNK_SIZE + 1) as u32; 3],

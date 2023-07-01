@@ -43,16 +43,21 @@ impl MapDataBase {
         type SampleShape = ConstShape3u32<16, 16, 16>;
         let mut voxels = Vec::new();
         for i in 0..SampleShape::SIZE {
-            let [x, y, z] = SampleShape::delinearize(i);
-            if ((x * x + y * y + z * z) as f32).sqrt() < 15.0 {
-                voxels.push(Voxel::FILLED);
-            } else {
-                voxels.push(Voxel::EMPTY);
-            };
+            // let [x, y, z] = SampleShape::delinearize(i);
+            // if ((x * x + y * y + z * z) as f32).sqrt() < 16.0 {
+            //     voxels.push(Voxel::FILLED);
+            // } else {
+            //     voxels.push(Voxel::EMPTY);
+            // };
+            voxels.push(Voxel::FILLED);
         }
 
         let serialized = bincode::serialize(&voxels).unwrap();
         self.db
-            .insert(ChunkKey(IVec3::ZERO).as_u8_array(), serialized);
+            .insert(ChunkKey(IVec3::ZERO).as_u8_array(), serialized.clone());
+        self.db.insert(
+            ChunkKey(IVec3::new(0, 0, 1)).as_u8_array(),
+            serialized.clone(),
+        );
     }
 }

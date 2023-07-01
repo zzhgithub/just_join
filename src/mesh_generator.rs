@@ -68,13 +68,14 @@ pub fn update_mesh_system(
     {
         if !mesh_manager.entities.contains_key(&key) && !mesh_manager.fast_key.contains(&key) {
             // fixme: 这里需要一个很好的加载周围的算法！
-            let volexs = if let Some(v) = chunk_map.get(key) {
-                v
-            } else {
-                return;
-            };
+            // let volexs = if let Some(v) = chunk_map.get(key) {
+            //     v
+            // } else {
+            //     return;
+            // };
             // 无论如何都插入进去 放置下次重复检查
             mesh_manager.fast_key.insert(key);
+            let volexs = chunk_map.get_with_neighbor(key);
             match gen_mesh(volexs.to_owned()) {
                 Some(render_mesh) => {
                     let task = pool.spawn(async move { (key, render_mesh) });
