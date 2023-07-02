@@ -9,6 +9,9 @@ pub struct Voxel {
 impl Voxel {
     pub const EMPTY: Self = Self { id: 0 };
     pub const FILLED: Self = Self { id: 1 };
+    pub const SOLD: Self = Self { id: 2 };
+    pub const GRASS: Self = Self { id: 3 };
+    pub const STONE: Self = Self { id: 4 };
 }
 
 impl MeshVoxel for Voxel {

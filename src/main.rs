@@ -28,7 +28,7 @@ mod voxel;
 pub type SmallKeyHashMap<K, V> = ahash::AHashMap<K, V>;
 
 // const zone
-pub const VIEW_RADIUS: f32 = 80.00;
+pub const VIEW_RADIUS: f32 = 40.00;
 pub const CHUNK_SIZE: i32 = 16;
 
 #[bevy_main]
