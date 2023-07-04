@@ -1,12 +1,11 @@
 use bevy::{
     prelude::{
-        bevy_main, App, AssetServer, Assets, Commands, IntoSystemConfig, MaterialPlugin, ParamSet,
-        PointLight, PointLightBundle, Query, Res, ResMut, SystemSet, Transform, Vec3, With,
-        Without,
+        bevy_main, App, AssetServer, Assets, Commands, Component, IntoSystemConfig, MaterialPlugin,
+        ParamSet, PointLight, PointLightBundle, Query, Res, ResMut, SystemSet, Transform, Vec3,
+        With, Without,
     },
     DefaultPlugins,
 };
-use bevy_flycam::{FlyCam, PlayerPlugin};
 use chunk::generate_offset_resoure;
 use chunk_generator::{chunk_generate_system, ChunkMap};
 use clip_spheres::{update_clip_shpere_system, ClipSpheres, Sphere3};
@@ -16,6 +15,7 @@ use mesh_generator::{deleter_mesh_system, update_mesh_system, MeshManager, MeshT
 
 use bevy_egui::EguiPlugin;
 use mesh_material::{BindlessMaterial, MaterialStorge};
+use palyer::{PlayerController, PlayerPlugin};
 
 mod chunk;
 mod chunk_generator;
@@ -26,6 +26,7 @@ mod map_generator;
 mod mesh;
 mod mesh_generator;
 mod mesh_material;
+mod palyer;
 mod voxel;
 
 pub type SmallKeyHashMap<K, V> = ahash::AHashMap<K, V>;
@@ -45,15 +46,16 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(MaterialPlugin::<BindlessMaterial>::default())
         .add_plugin(PlayerPlugin)
+        // 这里是设置了UI
         .add_plugin(EguiPlugin)
         .add_plugin(bevy_inspector_egui::DefaultInspectorConfigPlugin) // adds default options and `InspectorEguiImpl`s
         .add_system(inspector_ui)
-        .add_system(update_clip_shpere_system::<FlyCam>)
+        .add_system(update_clip_shpere_system::<PlayerController>)
         .add_system(chunk_generate_system)
         .add_system(deleter_mesh_system)
         .add_system(update_mesh_system)
         // 测试时使用的光源跟随
-        .add_system(light_follow_camera_system)
+        .add_system(light_follow_camera_system::<PlayerController>)
         .run();
 }
 
@@ -112,10 +114,12 @@ fn setup(
     );
 }
 
-fn light_follow_camera_system(
-    cam_q: Query<&Transform, With<FlyCam>>,
-    mut light_q: Query<&mut Transform, (With<PointLight>, Without<FlyCam>)>,
-) {
+fn light_follow_camera_system<T>(
+    cam_q: Query<&Transform, With<T>>,
+    mut light_q: Query<&mut Transform, (With<PointLight>, Without<T>)>,
+) where
+    T: Component,
+{
     let camera_position = if let Some(tfm) = cam_q.iter().next() {
         tfm.translation
     } else {
