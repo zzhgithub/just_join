@@ -1,11 +1,11 @@
 use bevy::{
     prelude::Mesh,
-    render::{mesh::Indices, render_resource::PrimitiveTopology},
+    render::{mesh::{Indices, VertexAttributeValues}, render_resource::PrimitiveTopology},
 };
 use block_mesh::{greedy_quads, GreedyQuadsBuffer, RIGHT_HANDED_Y_UP_CONFIG};
 use ndshape::{ConstShape, ConstShape3u32};
 
-use crate::{voxel::Voxel, CHUNK_SIZE};
+use crate::{voxel::Voxel, CHUNK_SIZE, mesh_material::ATTRIBUTE_DATA};
 
 pub fn gen_mesh(voxels: Vec<Voxel>) -> Option<Mesh> {
     type SampleShape = ConstShape3u32<18, 18, 18>;
@@ -29,7 +29,16 @@ pub fn gen_mesh(voxels: Vec<Voxel>) -> Option<Mesh> {
     let mut positions = Vec::with_capacity(num_vertices);
     let mut normals = Vec::with_capacity(num_vertices);
     let mut tex_coords = Vec::with_capacity(num_vertices);
-    for (group, face) in buffer.quads.groups.into_iter().zip(faces.into_iter()) {
+    let mut data = Vec::with_capacity(num_vertices);
+
+    for (block_face_normal_index, (group, face)) in buffer
+        .quads
+        .groups
+        .as_ref()
+        .into_iter()
+        .zip(faces.into_iter())
+        .enumerate()
+    {
         for quad in group.into_iter() {
             indices.extend_from_slice(&face.quad_mesh_indices(positions.len() as u32));
             positions.extend_from_slice(&face.quad_mesh_positions(&quad, 1.0));
@@ -40,21 +49,28 @@ pub fn gen_mesh(voxels: Vec<Voxel>) -> Option<Mesh> {
                 &quad,
             ));
             // 这里可以生成Data???? 但是怎么知道 是那个面的？
+            let index = SampleShape::linearize(quad.minimum);
+
+            let d = (block_face_normal_index as u32) << 8u32;
+            // todo 这里后面要知道是那个面的方便渲染
+            data.extend_from_slice(&[d | (voxels[index as usize].id) as u32; 4]);
         }
     }
 
     let mut render_mesh = Mesh::new(PrimitiveTopology::TriangleList);
 
-    for uv in tex_coords.iter_mut() {
-        for c in uv.iter_mut() {
-            *c *= CHUNK_SIZE as f32;
-        }
-    }
+    // for uv in tex_coords.iter_mut() {
+    //     for c in uv.iter_mut() {
+    //         *c *= CHUNK_SIZE as f32;
+    //     }
+    // }
 
     render_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
     render_mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
     render_mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, tex_coords);
+    render_mesh.insert_attribute(ATTRIBUTE_DATA, VertexAttributeValues::Uint32(data));
     render_mesh.set_indices(Some(Indices::U32(indices)));
+    
     Some(render_mesh)
 }
 

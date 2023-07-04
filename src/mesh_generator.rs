@@ -2,8 +2,8 @@ use std::collections::HashSet;
 
 use bevy::{
     prelude::{
-        Assets, Color, Commands, Entity, Mesh, PbrBundle, Res, ResMut, Resource, StandardMaterial,
-        Transform,
+        Assets, Color, Commands, Entity, MaterialMeshBundle, Mesh, PbrBundle, Res, ResMut,
+        Resource, StandardMaterial, Transform,
     },
     tasks::{AsyncComputeTaskPool, Task},
 };
@@ -13,6 +13,7 @@ use crate::{
     chunk_generator::ChunkMap,
     clip_spheres::ClipSpheres,
     mesh::gen_mesh,
+    mesh_material::MaterialStorge,
     voxel::Voxel,
     SmallKeyHashMap, CHUNK_SIZE, VIEW_RADIUS,
 };
@@ -35,8 +36,8 @@ pub fn update_mesh_system(
     clip_spheres: Res<ClipSpheres>,
     neighbour_offest: Res<NeighbourOffest>,
     mut mesh_assets: ResMut<Assets<Mesh>>,
-    mut material_assets: ResMut<Assets<StandardMaterial>>,
     mut mesh_task: ResMut<MeshTasks>,
+    materials: Res<MaterialStorge>,
 ) {
     let pool = AsyncComputeTaskPool::get();
     for ele in mesh_task.tasks.drain(..) {
@@ -45,15 +46,14 @@ pub fn update_mesh_system(
                 mesh_manager.entities.insert(
                     chunk_key,
                     commands
-                        .spawn(PbrBundle {
+                        .spawn(MaterialMeshBundle {
                             transform: Transform::from_xyz(
                                 (chunk_key.0.x * CHUNK_SIZE) as f32,
                                 (chunk_key.0.y * CHUNK_SIZE) as f32,
                                 (chunk_key.0.z * CHUNK_SIZE) as f32,
                             ),
                             mesh: mesh_assets.add(mesh),
-                            material: material_assets
-                                .add(StandardMaterial::from(Color::rgb(1.0, 0.0, 0.0))),
+                            material: materials.0.clone(),
                             ..Default::default()
                         })
                         .id(),

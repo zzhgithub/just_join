@@ -29,11 +29,17 @@ pub fn gen_chunk_data_by_seed(seed: i32, chunk_key: ChunkKey) -> Vec<Voxel> {
         // println!("({},{})", h, p_y);
         let index = PanleShap::linearize([x, z]);
         if p_y <= h + noise[index as usize] * 10.0 {
-            voxels.push(Voxel::FILLED);
+            if p_y < 5.0 {
+                voxels.push(Voxel::soil);
+            } else if p_y < 7.0 {
+                voxels.push(Voxel::grass);
+            } else {
+                voxels.push(Voxel::stone);
+            }
         } else {
             voxels.push(Voxel::EMPTY);
         }
-        
+
         // let h = (p_x * 8.0).sin() + (p_z * 8.0).cos();
         // if p_y <= noise[index as usize] * 10.0 {
         //     voxels.push(Voxel::FILLED);

@@ -1,7 +1,8 @@
 use bevy::{
     prelude::{
-        bevy_main, App, Commands, IntoSystemConfig, ParamSet, PointLight, PointLightBundle, Query,
-        SystemSet, Transform, Vec3, With, Without,
+        bevy_main, App, AssetServer, Assets, Commands, IntoSystemConfig, MaterialPlugin, ParamSet,
+        PointLight, PointLightBundle, Query, Res, ResMut, SystemSet, Transform, Vec3, With,
+        Without,
     },
     DefaultPlugins,
 };
@@ -14,6 +15,7 @@ use map_database::MapDataBase;
 use mesh_generator::{deleter_mesh_system, update_mesh_system, MeshManager, MeshTasks};
 
 use bevy_egui::EguiPlugin;
+use mesh_material::{BindlessMaterial, MaterialStorge};
 
 mod chunk;
 mod chunk_generator;
@@ -23,6 +25,7 @@ mod map_database;
 mod map_generator;
 mod mesh;
 mod mesh_generator;
+mod mesh_material;
 mod voxel;
 
 pub type SmallKeyHashMap<K, V> = ahash::AHashMap<K, V>;
@@ -30,6 +33,8 @@ pub type SmallKeyHashMap<K, V> = ahash::AHashMap<K, V>;
 // const zone
 pub const VIEW_RADIUS: f32 = 40.00;
 pub const CHUNK_SIZE: i32 = 16;
+// 贴图个数
+pub const MAX_TEXTURE_COUNT: usize = 4;
 
 #[bevy_main]
 fn main() {
@@ -38,6 +43,7 @@ fn main() {
     app_builder
         .add_startup_system(setup)
         .add_plugins(DefaultPlugins)
+        .add_plugin(MaterialPlugin::<BindlessMaterial>::default())
         .add_plugin(PlayerPlugin)
         .add_plugin(EguiPlugin)
         .add_plugin(bevy_inspector_egui::DefaultInspectorConfigPlugin) // adds default options and `InspectorEguiImpl`s
@@ -54,7 +60,11 @@ fn main() {
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
 struct ChunkFlush;
 
-fn setup(mut commands: Commands) {
+fn setup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut materials: ResMut<Assets<BindlessMaterial>>,
+) {
     // init resource of clip Spheres
     let eye = Vec3::ZERO;
     let init_shpere = Sphere3 {
@@ -86,9 +96,16 @@ fn setup(mut commands: Commands) {
 
     commands.insert_resource(db);
 
+    // 加载材质图案
+    commands.insert_resource(MaterialStorge::init(asset_server, materials));
+
     // 设置光源
     commands.spawn(
         (PointLightBundle {
+            point_light: PointLight {
+                intensity: 10000.0,
+                ..Default::default()
+            },
             transform: Transform::from_translation(Vec3::new(0.0, 10.0, 0.0)),
             ..Default::default()
         }),
