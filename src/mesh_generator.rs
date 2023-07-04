@@ -7,6 +7,10 @@ use bevy::{
     },
     tasks::{AsyncComputeTaskPool, Task},
 };
+use bevy_rapier3d::{
+    prelude::{Collider, RigidBody},
+    rapier::prelude::{RigidBodyType, SharedShape},
+};
 
 use crate::{
     chunk::{find_chunk_keys_array_by_shpere, ChunkKey, NeighbourOffest},
@@ -24,9 +28,9 @@ pub struct MeshManager {
     pub fast_key: HashSet<ChunkKey>,
 }
 
-#[derive(Debug, Resource)]
+#[derive(Resource)]
 pub struct MeshTasks {
-    pub tasks: Vec<Task<(ChunkKey, Mesh)>>,
+    pub tasks: Vec<Task<(ChunkKey, Mesh, Collider)>>,
 }
 
 pub fn update_mesh_system(
@@ -42,7 +46,7 @@ pub fn update_mesh_system(
     let pool = AsyncComputeTaskPool::get();
     for ele in mesh_task.tasks.drain(..) {
         match futures_lite::future::block_on(futures_lite::future::poll_once(ele)) {
-            Some((chunk_key, mesh)) => {
+            Some((chunk_key, mesh, collider)) => {
                 mesh_manager.entities.insert(
                     chunk_key,
                     commands
@@ -56,6 +60,8 @@ pub fn update_mesh_system(
                             material: materials.0.clone(),
                             ..Default::default()
                         })
+                        .insert(RigidBody::Fixed)
+                        .insert(collider)
                         .id(),
                 );
             }
@@ -81,8 +87,8 @@ pub fn update_mesh_system(
             mesh_manager.fast_key.insert(key);
             let volexs = chunk_map.get_with_neighbor(key);
             match gen_mesh(volexs.to_owned()) {
-                Some(render_mesh) => {
-                    let task = pool.spawn(async move { (key, render_mesh) });
+                Some((render_mesh, collider)) => {
+                    let task = pool.spawn(async move { (key, render_mesh, collider) });
                     mesh_task.tasks.push(task);
                 }
                 None => {}

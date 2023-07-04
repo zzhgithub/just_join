@@ -9,6 +9,8 @@ use bevy::prelude::{
 };
 use bevy::time::Time;
 use bevy::window::{CursorGrabMode, PrimaryWindow, Window};
+use bevy_rapier3d::prelude::RigidBody;
+use bevy_rapier3d::prelude::{Collider, LockedAxes};
 
 #[derive(Debug, Component)]
 pub struct PlayerController;
@@ -95,6 +97,16 @@ fn setup_player(mut commands: Commands) {
             ..Default::default()
         },
         PlayerController,
+        RigidBody::Dynamic,
+        // 这里尝试插入胶囊
+        LockedAxes::ROTATION_LOCKED_X
+            | LockedAxes::ROTATION_LOCKED_Y
+            | LockedAxes::ROTATION_LOCKED_Z,
+        Collider::capsule(
+            Vec3::from([0.0, 0.0, 2.0]),
+            Vec3::from([0.0, 2.0, 0.0]),
+            1.0,
+        ),
     ));
 }
 
@@ -193,7 +205,6 @@ fn cursor_grab(
     }
 }
 
-// Grab cursor when an entity with FlyCam is added
 fn initial_grab_on_flycam_spawn(
     mut primary_window: Query<&mut Window, With<PrimaryWindow>>,
     query_added: Query<Entity, Added<PlayerController>>,

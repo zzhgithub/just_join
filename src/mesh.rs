@@ -1,13 +1,20 @@
 use bevy::{
-    prelude::Mesh,
-    render::{mesh::{Indices, VertexAttributeValues}, render_resource::PrimitiveTopology},
+    prelude::{Mesh, Vec3},
+    render::{
+        mesh::{Indices, VertexAttributeValues},
+        render_resource::PrimitiveTopology,
+    },
+};
+use bevy_rapier3d::{
+    na::{Const, OPoint},
+    prelude::Collider,
 };
 use block_mesh::{greedy_quads, GreedyQuadsBuffer, RIGHT_HANDED_Y_UP_CONFIG};
 use ndshape::{ConstShape, ConstShape3u32};
 
-use crate::{voxel::Voxel, CHUNK_SIZE, mesh_material::ATTRIBUTE_DATA};
+use crate::{mesh_material::ATTRIBUTE_DATA, voxel::Voxel, CHUNK_SIZE};
 
-pub fn gen_mesh(voxels: Vec<Voxel>) -> Option<Mesh> {
+pub fn gen_mesh(voxels: Vec<Voxel>) -> Option<(Mesh, Collider)> {
     type SampleShape = ConstShape3u32<18, 18, 18>;
     let mut buffer = GreedyQuadsBuffer::new(SampleShape::SIZE as usize);
     let faces: [block_mesh::OrientedBlockFace; 6] = RIGHT_HANDED_Y_UP_CONFIG.faces;
@@ -59,19 +66,18 @@ pub fn gen_mesh(voxels: Vec<Voxel>) -> Option<Mesh> {
 
     let mut render_mesh = Mesh::new(PrimitiveTopology::TriangleList);
 
-    // for uv in tex_coords.iter_mut() {
-    //     for c in uv.iter_mut() {
-    //         *c *= CHUNK_SIZE as f32;
-    //     }
-    // }
-
-    render_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
+    render_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions.clone());
     render_mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
     render_mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, tex_coords);
     render_mesh.insert_attribute(ATTRIBUTE_DATA, VertexAttributeValues::Uint32(data));
-    render_mesh.set_indices(Some(Indices::U32(indices)));
-    
-    Some(render_mesh)
+    render_mesh.set_indices(Some(Indices::U32(indices.clone())));
+
+    let collider_vertices: Vec<Vec3> = positions.iter().cloned().map(|p| Vec3::from(p)).collect();
+    let collider_indices: Vec<[u32; 3]> = indices.chunks(3).map(|i| [i[0], i[1], i[2]]).collect();
+    // let collider = ColliderShape::trimesh(collider_vertices, collider_indices);
+    let collider = Collider::trimesh(collider_vertices, collider_indices);
+    // Collider::trimesh(vertices, indices);
+    Some((render_mesh, collider))
 }
 
 pub fn padding_extents(voxels: Vec<Voxel>) -> Vec<Voxel> {
