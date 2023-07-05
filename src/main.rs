@@ -50,6 +50,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(MaterialPlugin::<BindlessMaterial>::default())
         .add_plugin(PlayerPlugin)
+        // .add_plugin(PlayerRapierPlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         // .add_plugin(RapierDebugRenderPlugin::default())
         // 这里是设置了UI
@@ -106,6 +107,7 @@ fn setup(
 
     // 加载材质图案
     commands.insert_resource(MaterialStorge::init(asset_server, materials));
+
 
     // 设置光源
     commands.spawn(
