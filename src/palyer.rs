@@ -217,21 +217,27 @@ impl Plugin for PlayerPlugin {
     }
 }
 
+#[derive(Resource)]
+pub struct PlayerStorge(pub Entity);
+
 /// Spawns the `Camera3dBundle` to be controlled
 fn setup_player(mut commands: Commands) {
-    commands.spawn((
-        Camera3dBundle {
-            transform: Transform::from_xyz(-2.0, 20.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
-            ..Default::default()
-        },
-        PlayerController,
-        RigidBody::Dynamic,
-        LockedAxes::ROTATION_LOCKED_X
-            | LockedAxes::ROTATION_LOCKED_Y
-            | LockedAxes::ROTATION_LOCKED_Z,
-        // 这里尝试插入胶囊 对于需要的prb显示 后续才进行
-        Collider::ball(0.5),
-    ));
+    let palyer = commands
+        .spawn((
+            Camera3dBundle {
+                transform: Transform::from_xyz(-2.0, 20.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+                ..Default::default()
+            },
+            PlayerController,
+            RigidBody::Dynamic,
+            LockedAxes::ROTATION_LOCKED_X
+                | LockedAxes::ROTATION_LOCKED_Y
+                | LockedAxes::ROTATION_LOCKED_Z,
+            // 这里尝试插入胶囊 对于需要的prb显示 后续才进行
+            Collider::ball(0.5),
+        ))
+        .id();
+    commands.insert_resource(PlayerStorge(palyer));
 }
 
 // 添加中心十字
@@ -277,7 +283,7 @@ fn egui_center_cursor_system(
         .show(&egui_context.get_mut(), |ui| {
             //  = Color32::TRANSPARENT;
 
-            let size = ui.available_size();
+            // let size = ui.available_size();
             // 计算十字准星的位置和大小
             let crosshair_size = 20.0;
             let crosshair_pos = egui::Pos2::new(

@@ -1,4 +1,5 @@
 use bevy::{
+    pbr::wireframe::WireframePlugin,
     prelude::{
         bevy_main, App, AssetServer, Assets, Commands, Component, IntoSystemConfig, MaterialPlugin,
         ParamSet, PointLight, PointLightBundle, Query, Res, ResMut, SystemSet, Transform, Vec3,
@@ -20,6 +21,7 @@ use mesh_generator::{deleter_mesh_system, update_mesh_system, MeshManager, MeshT
 use bevy_egui::EguiPlugin;
 use mesh_material::{BindlessMaterial, MaterialStorge};
 use palyer::{PlayerController, PlayerPlugin};
+use ray_cast::{touth_mesh_ray_cast, MyRayCastPlugin};
 
 mod chunk;
 mod chunk_generator;
@@ -31,6 +33,7 @@ mod mesh;
 mod mesh_generator;
 mod mesh_material;
 mod palyer;
+mod ray_cast;
 mod voxel;
 
 pub type SmallKeyHashMap<K, V> = ahash::AHashMap<K, V>;
@@ -50,6 +53,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(MaterialPlugin::<BindlessMaterial>::default())
         .add_plugin(PlayerPlugin)
+        .add_plugin(MyRayCastPlugin)
         // .add_plugin(PlayerRapierPlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         // .add_plugin(RapierDebugRenderPlugin::default())
@@ -107,7 +111,6 @@ fn setup(
 
     // 加载材质图案
     commands.insert_resource(MaterialStorge::init(asset_server, materials));
-
 
     // 设置光源
     commands.spawn(
