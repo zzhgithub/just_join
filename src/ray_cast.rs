@@ -1,12 +1,13 @@
 use bevy::{
     pbr::wireframe::Wireframe,
     prelude::{
-        shape::Cube, Assets, Color, Commands, Component, IntoSystemAppConfig, Mesh, PbrBundle,
-        Plugin, Query, Res, ResMut, Resource, StandardMaterial, Transform, Vec3, Visibility, With,
-        Without,
+        shape::Cube, AlphaMode, Assets, Color, Commands, Component, IntoSystemAppConfig, Mesh,
+        PbrBundle, Plugin, Query, Res, ResMut, Resource, StandardMaterial, Transform, Vec3,
+        Visibility, With, Without,
     },
     render::render_resource::PrimitiveTopology,
 };
+use bevy_egui::egui::color_picker::Alpha;
 use bevy_rapier3d::prelude::{QueryFilter, RapierContext};
 
 use crate::palyer::{PlayerController, PlayerStorge};
@@ -117,12 +118,15 @@ pub fn setup_cube(
             material: materials.add(StandardMaterial {
                 unlit: true,
                 base_color: Color::BLACK,
+                depth_bias: 9999.0,
+                alpha_mode: AlphaMode::Mask(0.0),
                 ..Default::default()
             }), // 使用 Wireframe 材质
             transform: Transform::from_translation(Vec3::ZERO),
             ..Default::default()
         })
         .insert(HelpCube);
+    // .insert(DrawOrder(1));
 }
 pub struct MyRayCastPlugin;
 

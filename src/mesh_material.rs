@@ -136,8 +136,8 @@ impl Material for BindlessMaterial {
     ) -> Result<(), bevy::render::render_resource::SpecializedMeshPipelineError> {
         let vertex_layout = layout.get_layout(&[
             Mesh::ATTRIBUTE_POSITION.at_shader_location(0),
-            ATTRIBUTE_DATA.at_shader_location(1),
-            Mesh::ATTRIBUTE_UV_0.at_shader_location(2),
+            Mesh::ATTRIBUTE_UV_0.at_shader_location(1),
+            ATTRIBUTE_DATA.at_shader_location(2),
         ])?;
         descriptor.vertex.buffers = vec![vertex_layout];
         Ok(())

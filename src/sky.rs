@@ -28,7 +28,7 @@ fn daylight_cycle(
     timer.0.tick(time.delta());
 
     if timer.0.finished() {
-        let t = time.elapsed_seconds_wrapped() as f32 / 2.0;
+        let t = time.elapsed_seconds_wrapped() as f32 / 50.0;
         atmosphere.sun_position = Vec3::new(0., t.sin(), t.cos());
 
         if let Some((mut light_trans, mut directional)) = query.single_mut().into() {
@@ -46,8 +46,8 @@ fn setup_environment(mut commands: Commands) {
             directional_light: DirectionalLight {
                 illuminance: 100000.0,
                 // shadow_depth_bias: 0.02,
-                // shadow_normal_bias: 0.06,
-                // shadows_enabled: true,
+                // shadow_normal_bias: 1.06,
+                shadows_enabled: true,
                 ..Default::default()
             },
             ..Default::default()
@@ -60,9 +60,10 @@ pub struct SkyPlugin;
 
 impl Plugin for SkyPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.insert_resource(AtmosphereModel::default()) // Default Atmosphere material, we can edit it to simulate another planet
+        app.insert_resource(AtmosphereModel::new(Nishita::default())) // Default Atmosphere material, we can edit it to simulate another planet
             .insert_resource(CycleTimer(Timer::new(
-                bevy::utils::Duration::from_millis(60 * 1000 * 5), // Update our atmosphere every 50ms (in a real game, this would be much slower, but for the sake of an example we use a faster update)
+                bevy::utils::Duration::from_millis(50),
+                // Update our atmosphere every 50ms (in a real game, this would be much slower, but for the sake of an example we use a faster update)
                 TimerMode::Repeating,
             )))
             .add_plugin(AtmospherePlugin)

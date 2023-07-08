@@ -55,8 +55,8 @@ var nearest_sampler: sampler;
 
 struct Vertex {
     @location(0) position: vec3<f32>,
-    @location(1) voxel_data: u32,
-    @location(2) uv:vec2<f32>,
+    @location(1) uv:vec2<f32>,
+    @location(2) voxel_data: u32,
 };
 
 struct VertexOutput {
