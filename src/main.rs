@@ -1,12 +1,13 @@
 use bevy::{
-    pbr::wireframe::WireframePlugin,
+    pbr::{wireframe::WireframePlugin, Shadow},
     prelude::{
         bevy_main, App, AssetServer, Assets, Commands, Component, IntoSystemConfig, MaterialPlugin,
-        ParamSet, PointLight, PointLightBundle, Query, Res, ResMut, SystemSet, Transform, Vec3,
-        With, Without,
+        Msaa, ParamSet, PointLight, PointLightBundle, Query, Res, ResMut, SystemSet, Transform,
+        Vec3, With, Without,
     },
     DefaultPlugins,
 };
+use bevy_atmosphere::prelude::AtmospherePlugin;
 use bevy_rapier3d::{
     prelude::{NoUserData, RapierPhysicsPlugin},
     render::RapierDebugRenderPlugin,
@@ -21,7 +22,8 @@ use mesh_generator::{deleter_mesh_system, update_mesh_system, MeshManager, MeshT
 use bevy_egui::EguiPlugin;
 use mesh_material::{BindlessMaterial, MaterialStorge};
 use palyer::{PlayerController, PlayerPlugin};
-use ray_cast::{touth_mesh_ray_cast, MyRayCastPlugin};
+use ray_cast::MyRayCastPlugin;
+use sky::SkyPlugin;
 
 mod chunk;
 mod chunk_generator;
@@ -34,6 +36,7 @@ mod mesh_generator;
 mod mesh_material;
 mod palyer;
 mod ray_cast;
+mod sky;
 mod voxel;
 
 pub type SmallKeyHashMap<K, V> = ahash::AHashMap<K, V>;
@@ -47,6 +50,7 @@ pub const MAX_TEXTURE_COUNT: usize = 4;
 #[bevy_main]
 fn main() {
     let mut app_builder = App::new();
+    
 
     app_builder
         .add_startup_system(setup)
@@ -54,9 +58,10 @@ fn main() {
         .add_plugin(MaterialPlugin::<BindlessMaterial>::default())
         .add_plugin(PlayerPlugin)
         .add_plugin(MyRayCastPlugin)
-        // .add_plugin(PlayerRapierPlugin)
+        .add_plugin(SkyPlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         // .add_plugin(RapierDebugRenderPlugin::default())
+        .insert_resource(Msaa::Sample4)
         // 这里是设置了UI
         .add_plugin(EguiPlugin)
         .add_plugin(bevy_inspector_egui::DefaultInspectorConfigPlugin) // adds default options and `InspectorEguiImpl`s
@@ -66,7 +71,7 @@ fn main() {
         .add_system(deleter_mesh_system)
         .add_system(update_mesh_system)
         // 测试时使用的光源跟随
-        .add_system(light_follow_camera_system::<PlayerController>)
+        // .add_system(light_follow_camera_system::<PlayerController>)
         .run();
 }
 
@@ -112,17 +117,17 @@ fn setup(
     // 加载材质图案
     commands.insert_resource(MaterialStorge::init(asset_server, materials));
 
-    // 设置光源
-    commands.spawn(
-        (PointLightBundle {
-            point_light: PointLight {
-                intensity: 10000.0,
-                ..Default::default()
-            },
-            transform: Transform::from_translation(Vec3::new(0.0, 10.0, 0.0)),
-            ..Default::default()
-        }),
-    );
+    // 设置光源 有天空盒子不需要设置光源测试了
+    // commands.spawn(
+    //     (PointLightBundle {
+    //         point_light: PointLight {
+    //             intensity: 10000.0,
+    //             ..Default::default()
+    //         },
+    //         transform: Transform::from_translation(Vec3::new(0.0, 10.0, 0.0)),
+    //         ..Default::default()
+    //     }),
+    // );
 }
 
 fn light_follow_camera_system<T>(

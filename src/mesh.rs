@@ -15,7 +15,7 @@ use ndshape::{ConstShape, ConstShape3u32};
 use crate::{mesh_material::ATTRIBUTE_DATA, voxel::Voxel, CHUNK_SIZE};
 
 pub fn gen_mesh(voxels: Vec<Voxel>) -> Option<(Mesh, Collider)> {
-    type SampleShape = ConstShape3u32<18, 18, 18>;
+    type SampleShape = ConstShape3u32<18, 256, 18>;
     let mut buffer = GreedyQuadsBuffer::new(SampleShape::SIZE as usize);
     let faces: [block_mesh::OrientedBlockFace; 6] = RIGHT_HANDED_Y_UP_CONFIG.faces;
     // let padding_voxels = padding_extents(voxels);
@@ -23,7 +23,7 @@ pub fn gen_mesh(voxels: Vec<Voxel>) -> Option<(Mesh, Collider)> {
         &voxels,
         &SampleShape {},
         [0; 3],
-        [(CHUNK_SIZE + 1) as u32; 3],
+        [(CHUNK_SIZE + 1) as u32, 255, (CHUNK_SIZE + 1) as u32],
         &faces,
         &mut buffer,
     );

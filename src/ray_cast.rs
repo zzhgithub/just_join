@@ -58,7 +58,8 @@ pub fn touth_mesh_ray_cast(
             let normal = intersect.normal;
             let center_point = get_pos_chunk_center(hit_point, normal);
             if let Some(old_center) = choose_cube.center {
-                if old_center == center_point {
+                if old_center.distance(center_point) <= 0.0 {
+                    // println!("物体没有被移动");
                     return;
                 }
             }

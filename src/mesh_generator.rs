@@ -13,7 +13,7 @@ use bevy_rapier3d::{
 };
 
 use crate::{
-    chunk::{find_chunk_keys_array_by_shpere, ChunkKey, NeighbourOffest},
+    chunk::{find_chunk_keys_array_by_shpere_y_0, ChunkKey, NeighbourOffest},
     chunk_generator::ChunkMap,
     clip_spheres::ClipSpheres,
     mesh::gen_mesh,
@@ -53,7 +53,7 @@ pub fn update_mesh_system(
                         .spawn(MaterialMeshBundle {
                             transform: Transform::from_xyz(
                                 (chunk_key.0.x * CHUNK_SIZE) as f32,
-                                (chunk_key.0.y * CHUNK_SIZE) as f32,
+                                -128.0,
                                 (chunk_key.0.z * CHUNK_SIZE) as f32,
                             ),
                             mesh: mesh_assets.add(mesh),
@@ -69,23 +69,18 @@ pub fn update_mesh_system(
         }
     }
 
-    for key in find_chunk_keys_array_by_shpere(clip_spheres.new_sphere, neighbour_offest.0.clone())
-        .drain(..)
+    for key in
+        find_chunk_keys_array_by_shpere_y_0(clip_spheres.new_sphere, neighbour_offest.0.clone())
+            .drain(..)
     {
         if !mesh_manager.entities.contains_key(&key) && !mesh_manager.fast_key.contains(&key) {
-            // fixme: 这里需要一个很好的加载周围的算法！
-            // let volexs = if let Some(v) = chunk_map.get(key) {
-            //     v
-            // } else {
-            //     return;
-            // };
             if (!chunk_map.map_data.contains_key(&key)) {
                 // 这里没有加载好地图数据前 先不加载数据
                 return;
             }
             // 无论如何都插入进去 放置下次重复检查
             mesh_manager.fast_key.insert(key);
-            let volexs = chunk_map.get_with_neighbor(key);
+            let volexs = chunk_map.get_with_neighbor_full_y(key);
             match gen_mesh(volexs.to_owned()) {
                 Some((render_mesh, collider)) => {
                     let task = pool.spawn(async move { (key, render_mesh, collider) });
@@ -104,14 +99,16 @@ pub fn deleter_mesh_system(
     clip_spheres: Res<ClipSpheres>,
 ) {
     let mut chunks_to_remove = HashSet::new();
-    for key in find_chunk_keys_array_by_shpere(clip_spheres.old_sphere, neighbour_offest.0.clone())
-        .drain(..)
+    for key in
+        find_chunk_keys_array_by_shpere_y_0(clip_spheres.old_sphere, neighbour_offest.0.clone())
+            .drain(..)
     {
         chunks_to_remove.insert(key);
     }
 
-    for key in find_chunk_keys_array_by_shpere(clip_spheres.new_sphere, neighbour_offest.0.clone())
-        .drain(..)
+    for key in
+        find_chunk_keys_array_by_shpere_y_0(clip_spheres.new_sphere, neighbour_offest.0.clone())
+            .drain(..)
     {
         chunks_to_remove.remove(&key);
     }

@@ -8,6 +8,7 @@ use bevy::prelude::{
 };
 use bevy::time::Time;
 use bevy::window::{CursorGrabMode, PrimaryWindow, Window};
+use bevy_atmosphere::prelude::AtmosphereCamera;
 use bevy_egui::egui::epaint::Shadow;
 use bevy_egui::egui::{self, Color32, Pos2, Stroke};
 use bevy_egui::EguiContext;
@@ -228,13 +229,15 @@ fn setup_player(mut commands: Commands) {
                 transform: Transform::from_xyz(-2.0, 20.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
                 ..Default::default()
             },
+            AtmosphereCamera::default(),
             PlayerController,
             RigidBody::Dynamic,
             LockedAxes::ROTATION_LOCKED_X
                 | LockedAxes::ROTATION_LOCKED_Y
                 | LockedAxes::ROTATION_LOCKED_Z,
             // 这里尝试插入胶囊 对于需要的prb显示 后续才进行
-            Collider::ball(0.5),
+            // 这里的人物模型扩大呢？
+            Collider::ball(1.0),
         ))
         .id();
     commands.insert_resource(PlayerStorge(palyer));
