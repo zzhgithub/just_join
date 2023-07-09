@@ -119,7 +119,7 @@ pub fn setup_cube(
                 unlit: true,
                 base_color: Color::BLACK,
                 depth_bias: 9999.0,
-                alpha_mode: AlphaMode::Mask(0.0),
+                alpha_mode: AlphaMode::Mask(0.5),
                 ..Default::default()
             }), // 使用 Wireframe 材质
             transform: Transform::from_translation(Vec3::ZERO),

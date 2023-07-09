@@ -1,7 +1,7 @@
 use std::num::NonZeroU32;
 
 use bevy::{
-    prelude::{AssetServer, Assets, Handle, Image, Material, Mesh, Res, ResMut, Resource},
+    prelude::{AssetServer, Assets, Handle, Image, Material, Mesh, Res, ResMut, Resource, AlphaMode},
     reflect::TypeUuid,
     render::{
         mesh::MeshVertexAttribute,

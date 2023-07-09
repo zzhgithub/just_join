@@ -1,11 +1,11 @@
 use bevy::{
-    pbr::{wireframe::WireframePlugin, Shadow},
+    pbr::{wireframe::WireframePlugin, Shadow, DirectionalLightShadowMap},
     prelude::{
         bevy_main, App, AssetServer, Assets, Commands, Component, IntoSystemConfig, MaterialPlugin,
         Msaa, ParamSet, PointLight, PointLightBundle, Query, Res, ResMut, SystemSet, Transform,
-        Vec3, With, Without,
+        Vec3, With, Without, AmbientLight, Color,
     },
-    DefaultPlugins,
+    DefaultPlugins, render::render_resource::RenderPipeline,
 };
 use bevy_atmosphere::prelude::AtmospherePlugin;
 use bevy_rapier3d::{
@@ -61,7 +61,7 @@ fn main() {
         .add_plugin(SkyPlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         // .add_plugin(RapierDebugRenderPlugin::default())
-        .insert_resource(Msaa::Sample4)
+        // .insert_resource(Msaa::Sample4)
         // 这里是设置了UI
         .add_plugin(EguiPlugin)
         .add_plugin(bevy_inspector_egui::DefaultInspectorConfigPlugin) // adds default options and `InspectorEguiImpl`s
@@ -117,6 +117,13 @@ fn setup(
     // 加载材质图案
     commands.insert_resource(MaterialStorge::init(asset_server, materials));
 
+    // 添加氛围光
+    // commands.insert_resource(AmbientLight {
+    //     color: Color::WHITE,
+    //     brightness: 0.0,
+    // });
+
+    // commands.insert_resource(DirectionalLightShadowMap { size: 4096 });
     // 设置光源 有天空盒子不需要设置光源测试了
     // commands.spawn(
     //     (PointLightBundle {
