@@ -8,6 +8,7 @@
 #import bevy_pbr::lighting
 #import bevy_pbr::pbr_ambient
 #import bevy_pbr::shadows
+// #import "shaders/shadows.wgsl"
 #import bevy_pbr::fog
 #import bevy_pbr::pbr_functions
 
@@ -106,10 +107,10 @@ fn fragment(in: FragmentInput) -> @location(0) vec4<f32> {
     // Prepare a 'processed' StandardMaterial by sampling all textures to resolve
     // the material members
     var pbr_input: PbrInput = pbr_input_new();
-    pbr_input.material.metallic = 0.0;
-    // pbr_input.material.perceptual_roughness = 2.0;
+    pbr_input.material.metallic = 1.0;
+    pbr_input.material.perceptual_roughness = 1.0;
     // pbr_input.material.emissive = base_color;
-    // pbr_input.material.reflectance = 0.2;
+    // pbr_input.material.reflectance = 0.7;
 
     pbr_input.flags |= MESH_FLAGS_SHADOW_RECEIVER_BIT;
     pbr_input.material.base_color = textureSample(textures[layer], nearest_sampler, in.uv);

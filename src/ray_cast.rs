@@ -113,7 +113,7 @@ pub fn setup_cube(
 ) {
     commands
         .spawn(PbrBundle {
-            mesh: mesh_assets.add(create_cube_wireframe(1.0)),
+            mesh: mesh_assets.add(create_cube_wireframe(1.01)),
             visibility: bevy::prelude::Visibility::Hidden,
             material: materials.add(StandardMaterial {
                 unlit: true,

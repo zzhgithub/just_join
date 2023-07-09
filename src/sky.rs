@@ -1,4 +1,5 @@
 use bevy::{
+    pbr::CascadeShadowConfigBuilder,
     prelude::{
         Commands, Component, DirectionalLight, DirectionalLightBundle, IntoSystemAppConfig, Plugin,
         Quat, Query, Res, ResMut, Resource, Transform, Vec3, With,
@@ -50,6 +51,7 @@ fn setup_environment(mut commands: Commands) {
                 shadows_enabled: true,
                 ..Default::default()
             },
+            cascade_shadow_config: CascadeShadowConfigBuilder::default().into(),
             ..Default::default()
         },
         Sun, // Marks the light as Sun

@@ -2,9 +2,9 @@
 use bevy::ecs::event::ManualEventReader;
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::{
-    warn, Added, App, Camera3dBundle, Commands, Component, Entity, EulerRot, Events, Input,
-    IntoSystemAppConfig, KeyCode, Plugin, Quat, Query, Res, ResMut, Resource, Transform, Vec2,
-    Vec3, With, World,
+    warn, Added, App, AssetServer, Camera3dBundle, Commands, Component, Entity,
+    EnvironmentMapLight, EulerRot, Events, Input, IntoSystemAppConfig, KeyCode, Plugin, Quat,
+    Query, Res, ResMut, Resource, Transform, Vec2, Vec3, With, World,
 };
 use bevy::time::Time;
 use bevy::window::{CursorGrabMode, PrimaryWindow, Window};
@@ -222,12 +222,16 @@ impl Plugin for PlayerPlugin {
 pub struct PlayerStorge(pub Entity);
 
 /// Spawns the `Camera3dBundle` to be controlled
-fn setup_player(mut commands: Commands) {
+fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     let palyer = commands
         .spawn((
             Camera3dBundle {
                 transform: Transform::from_xyz(-2.0, 20.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
                 ..Default::default()
+            },
+            EnvironmentMapLight {
+                diffuse_map: asset_server.load("environment_maps/pisa_diffuse_rgb9e5_zstd.ktx2"),
+                specular_map: asset_server.load("environment_maps/pisa_specular_rgb9e5_zstd.ktx2"),
             },
             AtmosphereCamera::default(),
             PlayerController,
