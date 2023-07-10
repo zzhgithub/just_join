@@ -1,9 +1,9 @@
 use bevy::{
     pbr::{wireframe::WireframePlugin, DirectionalLightShadowMap, Shadow},
     prelude::{
-        bevy_main, AmbientLight, App, AssetServer, Assets, Color, Commands, Component,
-        MaterialPlugin, Msaa, ParamSet, PointLight, PointLightBundle, Query, Res, ResMut, Startup,
-        SystemSet, Transform, Update, Vec3, With, Without,
+        bevy_main, AmbientLight, App, AssetServer, Assets, Color, Commands, Component, FixedUpdate,
+        MaterialPlugin, Msaa, ParamSet, PointLight, PointLightBundle, PostUpdate, PreUpdate, Query,
+        Res, ResMut, Startup, SystemSet, Transform, Update, Vec3, With, Without,
     },
     render::render_resource::RenderPipeline,
     DefaultPlugins,
@@ -56,22 +56,24 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(MaterialPlugin::<BindlessMaterial>::default())
         .add_plugins(PlayerPlugin)
-        .add_plugin(MyRayCastPlugin)
+        // 这个物品获取又基本无效了
+        .add_plugins(MyRayCastPlugin)
+        // 0.11.0 不能使用了
         // .add_plugin(SkyPlugin)
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        // .add_plugin(RapierDebugRenderPlugin::default())
-        // .insert_resource(Msaa::Sample4)
-        // 这里是设置了UI
         // .add_plugin(EguiPlugin)
         // .add_plugin(bevy_inspector_egui::DefaultInspectorConfigPlugin) // adds default options and `InspectorEguiImpl`s
         // .add_system(inspector_ui)
+        .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
+        // .add_plugin(RapierDebugRenderPlugin::default())
+        .insert_resource(Msaa::Sample4)
+        // 这里是设置了UI
         .add_systems(Startup, setup)
-        .add_systems(Update, update_clip_shpere_system::<PlayerController>)
-        .add_systems(Update, chunk_generate_system)
-        .add_systems(Update, deleter_mesh_system)
-        .add_systems(Update, update_mesh_system)
+        .add_systems(PreUpdate, update_clip_shpere_system::<PlayerController>)
+        .add_systems(PreUpdate, chunk_generate_system)
+        .add_systems(PostUpdate, deleter_mesh_system)
+        .add_systems(FixedUpdate, update_mesh_system)
         // 测试时使用的光源跟随
-        // .add_system(light_follow_camera_system::<PlayerController>)
+        .add_systems(Update, light_follow_camera_system::<PlayerController>)
         .run();
 }
 
@@ -124,17 +126,18 @@ fn setup(
     // });
 
     // commands.insert_resource(DirectionalLightShadowMap { size: 4096 });
-    // 设置光源 有天空盒子不需要设置光源测试了
-    // commands.spawn(
-    //     (PointLightBundle {
-    //         point_light: PointLight {
-    //             intensity: 10000.0,
-    //             ..Default::default()
-    //         },
-    //         transform: Transform::from_translation(Vec3::new(0.0, 10.0, 0.0)),
-    //         ..Default::default()
-    //     }),
-    // );
+    // FIXME: 设置光源 有天空盒子不需要设置光源测试了 
+    commands.spawn(
+        (PointLightBundle {
+            point_light: PointLight {
+                intensity: 10000.0,
+                shadows_enabled: true,
+                ..Default::default()
+            },
+            transform: Transform::from_translation(Vec3::new(0.0, 10.0, 0.0)),
+            ..Default::default()
+        }),
+    );
 }
 
 fn light_follow_camera_system<T>(
