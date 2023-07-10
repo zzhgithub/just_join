@@ -229,6 +229,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                 transform: Transform::from_xyz(-2.0, 20.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
                 ..Default::default()
             },
+            // 这里设置环境光的图像 FIXME这里会影响光影
             EnvironmentMapLight {
                 diffuse_map: asset_server.load("environment_maps/pisa_diffuse_rgb9e5_zstd.ktx2"),
                 specular_map: asset_server.load("environment_maps/pisa_specular_rgb9e5_zstd.ktx2"),
