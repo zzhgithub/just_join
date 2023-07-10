@@ -56,7 +56,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(MaterialPlugin::<BindlessMaterial>::default())
         .add_plugins(PlayerPlugin)
-        // 这个物品获取又基本无效了
+        //FIXME: 这个物品获取又基本无效了 物理引擎不能识别到碰撞了
         .add_plugins(MyRayCastPlugin)
         // 0.11.0 不能使用了
         // .add_plugin(SkyPlugin)
@@ -126,7 +126,7 @@ fn setup(
     // });
 
     // commands.insert_resource(DirectionalLightShadowMap { size: 4096 });
-    // FIXME: 设置光源 有天空盒子不需要设置光源测试了 
+    // FIXME: 设置光源 有天空盒子不需要设置光源测试了
     commands.spawn(
         (PointLightBundle {
             point_light: PointLight {

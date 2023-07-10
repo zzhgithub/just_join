@@ -69,7 +69,7 @@ impl ChunkMap {
         for i in 0..SampleShape::SIZE {
             let [x, y, z] = SampleShape::delinearize(i);
             let layer = y / 16;
-            let layer_index = layer - 7;
+            let layer_index: i32 = (layer as i32) - 7;
             let data = map.get(&(layer_index as i32));
             let index = DataShape::linearize([x, y % 16, z]);
             result.push(Self::get_by_index(data, index));
