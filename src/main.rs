@@ -1,11 +1,12 @@
 use bevy::{
-    pbr::{wireframe::WireframePlugin, Shadow, DirectionalLightShadowMap},
+    pbr::{wireframe::WireframePlugin, DirectionalLightShadowMap, Shadow},
     prelude::{
-        bevy_main, App, AssetServer, Assets, Commands, Component, IntoSystemConfig, MaterialPlugin,
-        Msaa, ParamSet, PointLight, PointLightBundle, Query, Res, ResMut, SystemSet, Transform,
-        Vec3, With, Without, AmbientLight, Color,
+        bevy_main, AmbientLight, App, AssetServer, Assets, Color, Commands, Component,
+        MaterialPlugin, Msaa, ParamSet, PointLight, PointLightBundle, Query, Res, ResMut, Startup,
+        SystemSet, Transform, Update, Vec3, With, Without,
     },
-    DefaultPlugins, render::render_resource::RenderPipeline,
+    render::render_resource::RenderPipeline,
+    DefaultPlugins,
 };
 use bevy_atmosphere::prelude::AtmospherePlugin;
 use bevy_rapier3d::{
@@ -15,7 +16,7 @@ use bevy_rapier3d::{
 use chunk::generate_offset_resoure;
 use chunk_generator::{chunk_generate_system, ChunkMap};
 use clip_spheres::{update_clip_shpere_system, ClipSpheres, Sphere3};
-use inspector_egui::inspector_ui;
+// use inspector_egui::inspector_ui;
 use map_database::MapDataBase;
 use mesh_generator::{deleter_mesh_system, update_mesh_system, MeshManager, MeshTasks};
 
@@ -23,12 +24,12 @@ use bevy_egui::EguiPlugin;
 use mesh_material::{BindlessMaterial, MaterialStorge};
 use palyer::{PlayerController, PlayerPlugin};
 use ray_cast::MyRayCastPlugin;
-use sky::SkyPlugin;
+// use sky::SkyPlugin;
 
 mod chunk;
 mod chunk_generator;
 mod clip_spheres;
-mod inspector_egui;
+// mod inspector_egui;
 mod map_database;
 mod map_generator;
 mod mesh;
@@ -36,7 +37,7 @@ mod mesh_generator;
 mod mesh_material;
 mod palyer;
 mod ray_cast;
-mod sky;
+// mod sky;
 mod voxel;
 
 pub type SmallKeyHashMap<K, V> = ahash::AHashMap<K, V>;
@@ -50,26 +51,25 @@ pub const MAX_TEXTURE_COUNT: usize = 4;
 #[bevy_main]
 fn main() {
     let mut app_builder = App::new();
-    
 
     app_builder
-        .add_startup_system(setup)
         .add_plugins(DefaultPlugins)
-        .add_plugin(MaterialPlugin::<BindlessMaterial>::default())
-        .add_plugin(PlayerPlugin)
+        .add_plugins(MaterialPlugin::<BindlessMaterial>::default())
+        .add_plugins(PlayerPlugin)
         .add_plugin(MyRayCastPlugin)
-        .add_plugin(SkyPlugin)
+        // .add_plugin(SkyPlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         // .add_plugin(RapierDebugRenderPlugin::default())
         // .insert_resource(Msaa::Sample4)
         // 这里是设置了UI
-        .add_plugin(EguiPlugin)
-        .add_plugin(bevy_inspector_egui::DefaultInspectorConfigPlugin) // adds default options and `InspectorEguiImpl`s
-        .add_system(inspector_ui)
-        .add_system(update_clip_shpere_system::<PlayerController>)
-        .add_system(chunk_generate_system)
-        .add_system(deleter_mesh_system)
-        .add_system(update_mesh_system)
+        // .add_plugin(EguiPlugin)
+        // .add_plugin(bevy_inspector_egui::DefaultInspectorConfigPlugin) // adds default options and `InspectorEguiImpl`s
+        // .add_system(inspector_ui)
+        .add_systems(Startup, setup)
+        .add_systems(Update, update_clip_shpere_system::<PlayerController>)
+        .add_systems(Update, chunk_generate_system)
+        .add_systems(Update, deleter_mesh_system)
+        .add_systems(Update, update_mesh_system)
         // 测试时使用的光源跟随
         // .add_system(light_follow_camera_system::<PlayerController>)
         .run();

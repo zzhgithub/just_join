@@ -1,7 +1,7 @@
 use bevy::{
     pbr::CascadeShadowConfigBuilder,
     prelude::{
-        Commands, Component, DirectionalLight, DirectionalLightBundle, IntoSystemAppConfig, Plugin,
+        Commands, Component, DirectionalLight, DirectionalLightBundle, Plugin,
         Quat, Query, Res, ResMut, Resource, Transform, Vec3, With,
     },
     time::{Time, Timer, TimerMode},

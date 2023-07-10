@@ -3,8 +3,8 @@ use bevy::ecs::event::ManualEventReader;
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::{
     warn, Added, App, AssetServer, Camera3dBundle, Commands, Component, Entity,
-    EnvironmentMapLight, EulerRot, Events, Input, IntoSystemAppConfig, KeyCode, Plugin, Quat,
-    Query, Res, ResMut, Resource, Transform, Vec2, Vec3, With, World,
+    EnvironmentMapLight, EulerRot, Events, Input, KeyCode, Plugin, Quat, Query, Res, ResMut,
+    Resource, Startup, Transform, Update, Vec2, Vec3, With, World,
 };
 use bevy::time::Time;
 use bevy::window::{CursorGrabMode, PrimaryWindow, Window};
@@ -63,7 +63,7 @@ impl Default for KeyBindings {
             move_left: KeyCode::A,
             move_right: KeyCode::D,
             move_ascend: KeyCode::Space,
-            move_descend: KeyCode::LShift,
+            move_descend: KeyCode::ShiftLeft,
             toggle_grab_cursor: KeyCode::Escape,
         }
     }
@@ -209,12 +209,12 @@ impl Plugin for PlayerPlugin {
         app.init_resource::<InputState>()
             .init_resource::<MovementSettings>()
             .init_resource::<KeyBindings>()
-            .add_system(setup_player.on_startup())
-            .add_system(initial_grab_cursor.on_startup())
-            .add_system(player_move)
-            .add_system(player_look)
-            .add_system(cursor_grab)
-            .add_system(egui_center_cursor_system);
+            .add_systems(Startup, setup_player)
+            .add_systems(Startup, initial_grab_cursor)
+            .add_systems(Update, player_move)
+            .add_systems(Update, player_look)
+            .add_systems(Update, cursor_grab);
+        // .add_system(egui_center_cursor_system);
     }
 }
 
@@ -234,7 +234,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                 diffuse_map: asset_server.load("environment_maps/pisa_diffuse_rgb9e5_zstd.ktx2"),
                 specular_map: asset_server.load("environment_maps/pisa_specular_rgb9e5_zstd.ktx2"),
             },
-            AtmosphereCamera::default(),
+            // AtmosphereCamera::default(),
             PlayerController,
             RigidBody::Dynamic,
             LockedAxes::ROTATION_LOCKED_X
@@ -249,88 +249,90 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 // 添加中心十字
-fn egui_center_cursor_system(
-    mut egui_context_q: Query<&mut EguiContext, With<PrimaryWindow>>,
-    window_qurey: Query<&mut Window, With<PrimaryWindow>>,
-) {
-    let Ok(egui_context) = egui_context_q.get_single_mut() else{return;};
-    let mut egui_context = egui_context.clone();
+// fn egui_center_cursor_system(
+//     world: &mut World,
+//     mut egui_context_q: Query<&mut EguiContext, With<PrimaryWindow>>,
+//     window_qurey: Query<&mut Window, With<PrimaryWindow>>,
+// ) {
 
-    let Ok(window) = window_qurey.get_single() else{return;};
-    let size = Vec2::new(window.width(), window.height());
-    // 透明的屏幕！
-    let my_frame = egui::containers::Frame {
-        inner_margin: egui::style::Margin {
-            left: 10.,
-            right: 10.,
-            top: 10.,
-            bottom: 10.,
-        },
-        outer_margin: egui::style::Margin {
-            left: 10.,
-            right: 10.,
-            top: 10.,
-            bottom: 10.,
-        },
-        rounding: egui::Rounding {
-            nw: 1.0,
-            ne: 1.0,
-            sw: 1.0,
-            se: 1.0,
-        },
-        shadow: Shadow {
-            extrusion: 1.0,
-            color: Color32::TRANSPARENT,
-        },
-        fill: Color32::TRANSPARENT,
-        stroke: egui::Stroke::new(2.0, Color32::TRANSPARENT),
-    };
+//     let Ok(egui_context) = egui_context_q.get_single_mut() else{return;};
+//     let mut egui_context = egui_context.clone();
 
-    egui::CentralPanel::default()
-        .frame(my_frame)
-        .show(&egui_context.get_mut(), |ui| {
-            //  = Color32::TRANSPARENT;
+//     let Ok(window) = window_qurey.get_single() else{return;};
+//     let size = Vec2::new(window.width(), window.height());
+//     // 透明的屏幕！
+//     let my_frame = egui::containers::Frame {
+//         inner_margin: egui::style::Margin {
+//             left: 10.,
+//             right: 10.,
+//             top: 10.,
+//             bottom: 10.,
+//         },
+//         outer_margin: egui::style::Margin {
+//             left: 10.,
+//             right: 10.,
+//             top: 10.,
+//             bottom: 10.,
+//         },
+//         rounding: egui::Rounding {
+//             nw: 1.0,
+//             ne: 1.0,
+//             sw: 1.0,
+//             se: 1.0,
+//         },
+//         shadow: Shadow {
+//             extrusion: 1.0,
+//             color: Color32::TRANSPARENT,
+//         },
+//         fill: Color32::TRANSPARENT,
+//         stroke: egui::Stroke::new(2.0, Color32::TRANSPARENT),
+//     };
 
-            // let size = ui.available_size();
-            // 计算十字准星的位置和大小
-            let crosshair_size = 20.0;
-            let crosshair_pos = egui::Pos2::new(
-                size.x / 2.0 - crosshair_size / 2.0,
-                size.y / 2.0 - crosshair_size / 2.0,
-            );
-            // 外边框
-            let crosshair_rect =
-                egui::Rect::from_min_size(crosshair_pos, egui::Vec2::splat(crosshair_size));
+//     egui::CentralPanel::default()
+//         .frame(my_frame)
+//         .show(&egui_context.get_mut(), |ui| {
+//             //  = Color32::TRANSPARENT;
 
-            // 绘制十字准星的竖线
-            let line_width = 2.0;
-            let line_rect = egui::Rect::from_min_max(
-                egui::Pos2::new(
-                    crosshair_rect.center().x - line_width / 2.0,
-                    crosshair_rect.min.y,
-                ),
-                egui::Pos2::new(
-                    crosshair_rect.center().x + line_width / 2.0,
-                    crosshair_rect.max.y,
-                ),
-            );
-            ui.painter()
-                .rect_filled(line_rect, 1.0, egui::Color32::WHITE);
+//             // let size = ui.available_size();
+//             // 计算十字准星的位置和大小
+//             let crosshair_size = 20.0;
+//             let crosshair_pos = egui::Pos2::new(
+//                 size.x / 2.0 - crosshair_size / 2.0,
+//                 size.y / 2.0 - crosshair_size / 2.0,
+//             );
+//             // 外边框
+//             let crosshair_rect =
+//                 egui::Rect::from_min_size(crosshair_pos, egui::Vec2::splat(crosshair_size));
 
-            // 绘制十字准星的横线
-            let line_rect = egui::Rect::from_min_max(
-                egui::Pos2::new(
-                    crosshair_rect.min.x,
-                    crosshair_rect.center().y - line_width / 2.0,
-                ),
-                egui::Pos2::new(
-                    crosshair_rect.max.x,
-                    crosshair_rect.center().y + line_width / 2.0,
-                ),
-            );
-            ui.painter()
-                .rect_filled(line_rect, 1.0, egui::Color32::WHITE);
+//             // 绘制十字准星的竖线
+//             let line_width = 2.0;
+//             let line_rect = egui::Rect::from_min_max(
+//                 egui::Pos2::new(
+//                     crosshair_rect.center().x - line_width / 2.0,
+//                     crosshair_rect.min.y,
+//                 ),
+//                 egui::Pos2::new(
+//                     crosshair_rect.center().x + line_width / 2.0,
+//                     crosshair_rect.max.y,
+//                 ),
+//             );
+//             ui.painter()
+//                 .rect_filled(line_rect, 1.0, egui::Color32::WHITE);
 
-            // todo 这里也可以添加下方物品栏
-        });
-}
+//             // 绘制十字准星的横线
+//             let line_rect = egui::Rect::from_min_max(
+//                 egui::Pos2::new(
+//                     crosshair_rect.min.x,
+//                     crosshair_rect.center().y - line_width / 2.0,
+//                 ),
+//                 egui::Pos2::new(
+//                     crosshair_rect.max.x,
+//                     crosshair_rect.center().y + line_width / 2.0,
+//                 ),
+//             );
+//             ui.painter()
+//                 .rect_filled(line_rect, 1.0, egui::Color32::WHITE);
+
+//             // todo 这里也可以添加下方物品栏
+//         });
+// }

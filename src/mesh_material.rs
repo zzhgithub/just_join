@@ -1,8 +1,10 @@
 use std::num::NonZeroU32;
 
 use bevy::{
-    prelude::{AssetServer, Assets, Handle, Image, Material, Mesh, Res, ResMut, Resource, AlphaMode},
-    reflect::TypeUuid,
+    prelude::{
+        AlphaMode, AssetServer, Assets, Handle, Image, Material, Mesh, Res, ResMut, Resource,
+    },
+    reflect::{TypePath, TypeUuid},
     render::{
         mesh::MeshVertexAttribute,
         render_asset::RenderAssets,
@@ -19,7 +21,7 @@ use bevy::{
 
 use crate::{voxel::Voxel, MAX_TEXTURE_COUNT};
 
-#[derive(Debug, Clone, TypeUuid)]
+#[derive(Debug, Clone, TypeUuid, TypePath)]
 #[uuid = "8dd2b424-45a2-4a53-ac29-7ce356b2d5fe"]
 pub struct BindlessMaterial {
     textures: Vec<Handle<Image>>,
@@ -52,6 +54,7 @@ impl AsBindGroup for BindlessMaterial {
                 None => return Err(AsBindGroupError::RetryNextUpdate),
             }
         }
+        let fallback_image = &fallback_image.d2;
 
         let textures = vec![&fallback_image.texture_view; MAX_TEXTURE_COUNT];
 
@@ -141,6 +144,22 @@ impl Material for BindlessMaterial {
         ])?;
         descriptor.vertex.buffers = vec![vertex_layout];
         Ok(())
+    }
+
+    fn alpha_mode(&self) -> AlphaMode {
+        AlphaMode::Opaque
+    }
+
+    fn depth_bias(&self) -> f32 {
+        0.0
+    }
+
+    fn prepass_vertex_shader() -> ShaderRef {
+        ShaderRef::Default
+    }
+
+    fn prepass_fragment_shader() -> ShaderRef {
+        ShaderRef::Default
     }
 }
 

@@ -1,7 +1,7 @@
 use bevy::{
     pbr::wireframe::Wireframe,
     prelude::{
-        shape::Cube, AlphaMode, Assets, Color, Commands, Component, IntoSystemAppConfig, Mesh,
+        shape::Cube, AlphaMode, Assets, Color, Commands, Component, Mesh,
         PbrBundle, Plugin, Query, Res, ResMut, Resource, StandardMaterial, Transform, Vec3,
         Visibility, With, Without,
     },
@@ -134,7 +134,7 @@ impl Plugin for MyRayCastPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         // 加载资源
         app.insert_resource(ChooseCube::new())
-            .add_system(setup_cube.on_startup())
+            .add_system(setup_cube)
             .add_system(touth_mesh_ray_cast);
         // 设置更新系统
     }
