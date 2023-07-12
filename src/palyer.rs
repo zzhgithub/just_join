@@ -214,7 +214,6 @@ impl Plugin for PlayerPlugin {
             .add_systems(Update, player_move)
             .add_systems(Update, player_look)
             .add_systems(Update, cursor_grab);
-        // .add_system(egui_center_cursor_system);
     }
 }
 
@@ -336,3 +335,4 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
 //             // todo 这里也可以添加下方物品栏
 //         });
 // }
+
