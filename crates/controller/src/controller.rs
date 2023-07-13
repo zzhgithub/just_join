@@ -1,7 +1,7 @@
 use bevy::{
     prelude::{
         Component, EulerRot, EventReader, EventWriter, Input, IntoSystemConfigs,
-        IntoSystemSetConfigs, KeyCode, Plugin, PreUpdate, Quat, Query, Res, Resource, SystemSet,
+        IntoSystemSetConfigs, KeyCode, Plugin, PreUpdate, Quat, Query, Res, SystemSet,
         Transform, Vec3, With,
     },
     time::Time,
@@ -28,7 +28,7 @@ pub struct HeadTag;
 pub struct CameraTag;
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-enum ControllerSet {
+pub enum ControllerSet {
     INPUT_TO_EVENT,
     INPUT_TO_LOOK,
     FORWARD_UP,
