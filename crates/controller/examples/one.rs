@@ -3,7 +3,8 @@ use bevy::{
         shape, App, Assets, BuildChildren, Camera3dBundle, ClearColor, Color, Commands, Component,
         EventReader, GlobalTransform, Input, KeyCode, Mat4, Mesh, Msaa, PbrBundle, PointLight,
         PointLightBundle, PreUpdate, Quat, Query, Res, ResMut, Resource, SpotLight,
-        SpotLightBundle, StandardMaterial, Startup, Transform, Update, Vec3, With, Without,
+        SpotLightBundle, StandardMaterial, Startup, Transform, Update, Vec3, Visibility, With,
+        Without,
     },
     DefaultPlugins,
 };
@@ -13,43 +14,9 @@ use controller::{
         CharacterControllerPlugin, HeadTag, Mass, YawTag,
     },
     events::TranslationEvent,
-    look::{LookDirection, LookEntity},
+    look::{LookDirection, LookEntity}, utils::{CharacterSettings, FakeKinematicRigidBody},
 };
 use rand::Rng;
-
-#[derive(Resource)]
-pub struct CharacterSettings {
-    pub scale: Vec3,
-    pub head_scale: f32,
-    pub head_yaw: f32,
-    pub follow_offset: Vec3,
-    pub focal_point: Vec3,
-}
-
-impl Default for CharacterSettings {
-    fn default() -> Self {
-        Self {
-            scale: Vec3::new(0.5, 1.9, 0.3),
-            head_scale: 0.3,
-            head_yaw: 0.0,
-            follow_offset: Vec3::new(0.0, 4.0, 8.0), // Relative to head
-            focal_point: Vec3::ZERO,                 // Relative to head
-        }
-    }
-}
-
-impl CharacterSettings {
-    fn first() -> Self {
-        Self {
-            focal_point: -Vec3::Z,     // Relative to head
-            follow_offset: Vec3::ZERO, // Relative to head
-            ..Default::default()
-        }
-    }
-}
-
-#[derive(Component)]
-pub struct FakeKinematicRigidBody;
 
 pub fn spawn_world(
     mut commands: Commands,
@@ -199,12 +166,12 @@ pub fn main() {
         .add_plugins(CharacterControllerPlugin)
         // .add_system(exit_on_esc_system)
         .add_systems(Startup, (spawn_world, spawn_character))
-        // .insert_resource(CharacterSettings {
-        //     focal_point: Vec3::new(0., 0., 20.0),     // Relative to head
-        //     follow_offset: Vec3::ZERO, // Relative to head
-        //     ..Default::default()
-        // })
-        .insert_resource(CharacterSettings::first())
+        .insert_resource(CharacterSettings {
+            focal_point: -Vec3::Z * 10.0,  // Relative to head
+            follow_offset: -Vec3::Z * 2.0, // Relative to head
+            ..Default::default()
+        })
+        // .insert_resource(CharacterSettings::first())
         .add_systems(PreUpdate, toggle_look_mode)
         .add_systems(
             Update,
