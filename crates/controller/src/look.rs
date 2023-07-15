@@ -25,7 +25,7 @@ pub struct LookEntity(pub Entity);
 pub fn forward_up(settings: Res<MouseSettings>, mut query: Query<&mut LookDirection>) {
     for mut look in query.iter_mut() {
         let rotation = Quat::from_euler(
-            EulerRot::XYZ,
+            EulerRot::YXZ,
             settings.yaw_pitch_roll.x,
             settings.yaw_pitch_roll.y,
             settings.yaw_pitch_roll.z,

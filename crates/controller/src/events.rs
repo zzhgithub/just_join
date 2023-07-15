@@ -65,7 +65,7 @@ impl Deref for PitchEvent {
 
 #[derive(Debug, Default, Event)]
 pub struct YawEvent {
-    yaw: f32,
+    pub yaw: f32,
 }
 
 impl YawEvent {

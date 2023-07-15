@@ -1,8 +1,8 @@
 use bevy::{
     prelude::{
-        Component, EulerRot, EventReader, EventWriter, Input, IntoSystemConfigs,
-        IntoSystemSetConfigs, KeyCode, Plugin, PreUpdate, Quat, Query, Res, SystemSet,
-        Transform, Vec3, With,
+        Component, EventReader, EventWriter, Input, IntoSystemConfigs,
+        IntoSystemSetConfigs, KeyCode, Plugin, PreUpdate, Quat, Query, Res, SystemSet, Transform,
+        Vec3, With,
     },
     time::Time,
 };
@@ -284,7 +284,7 @@ pub fn controller_to_pitch(
 ) {
     if let Some(pitch) = pitches.iter().next() {
         for mut transform in query.iter_mut() {
-            transform.rotation = Quat::from_euler(EulerRot::XYZ, 0.0, **pitch, 0.0);
+            transform.rotation = Quat::from_rotation_x(**pitch);
         }
     }
 }
