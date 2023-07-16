@@ -1,10 +1,11 @@
 use bevy::{
     prelude::{
         shape, App, Assets, BuildChildren, Camera3dBundle, ClearColor, Color, Commands,
-        GlobalTransform, Mat4, Mesh, Msaa, PbrBundle, PointLightBundle, Quat, Res, ResMut,
-        StandardMaterial, Startup, Transform, Update, Vec3,
+        ComputedVisibility, GlobalTransform, Mat4, Mesh, Msaa, PbrBundle, PointLightBundle, Quat,
+        Res, ResMut, StandardMaterial, Startup, Transform, Update, Vec3, Visibility,
     },
     transform::TransformBundle,
+    utils::petgraph::visit::Visitable,
     DefaultPlugins,
 };
 use bevy_rapier3d::{
@@ -37,7 +38,8 @@ pub fn main() {
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
         // debug
         .add_plugins(RapierDebugRenderPlugin::default())
-        .add_plugins(RapierDynamicForceCharacterControllerPlugin)
+        // .add_plugins(RapierDynamicForceCharacterControllerPlugin)
+        .add_plugins(RapierDynamicImpulseCharacterControllerPlugin)
         .insert_resource(CharacterSettings {
             focal_point: -Vec3::Z * 10.0,  // Relative to head
             follow_offset: -Vec3::Z * 2.0, // Relative to head
@@ -158,7 +160,11 @@ pub fn spawn_character(
         // .insert(RigidBodyPositionSync::Interpolated { prev_pos: None })
         .id();
     let yaw = commands
-        .spawn((GlobalTransform::IDENTITY, Transform::IDENTITY, YawTag))
+        .spawn((
+            GlobalTransform::IDENTITY,
+            Transform::IDENTITY,
+            YawTag,
+        ))
         .id();
     let body_model = commands
         .spawn(PbrBundle {
@@ -174,6 +180,7 @@ pub fn spawn_character(
                     0.0,
                 ),
             )),
+            visibility: Visibility::Visible,
             ..Default::default()
         })
         .id();
@@ -198,6 +205,7 @@ pub fn spawn_character(
             material: red,
             mesh: cube,
             transform: Transform::from_scale(Vec3::splat(character_settings.head_scale)),
+            visibility: Visibility::Visible,
             ..Default::default()
         })
         .id();

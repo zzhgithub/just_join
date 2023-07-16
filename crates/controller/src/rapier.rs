@@ -59,13 +59,15 @@ impl Plugin for RapierDynamicImpulseCharacterControllerPlugin {
                     (body_to_velocity).in_set(RapiserSet::BODY_TO_VELOCITY_SYSTEM),
                     (controller_to_rapier_dynamic_impulse)
                         .in_set(RapiserSet::CONTROLLER_TO_RAPIER_DYNAMIC_IMPULSE_SYSTEM)
-                        .after(RapiserSet::BODY_TO_VELOCITY_SYSTEM),
+                        .after(RapiserSet::BODY_TO_VELOCITY_SYSTEM)
+                        .after(RapiserSet::CREATE_MASS_FROM_RAPIER_SYSTEM),
                     (controller_to_yaw, controller_to_pitch),
                 ),
             );
     }
 }
 
+// FIXME: 这里受力计算是错误的！
 pub struct RapierDynamicForceCharacterControllerPlugin;
 
 impl Plugin for RapierDynamicForceCharacterControllerPlugin {
@@ -94,7 +96,8 @@ impl Plugin for RapierDynamicForceCharacterControllerPlugin {
                     (body_to_velocity).in_set(RapiserSet::BODY_TO_VELOCITY_SYSTEM),
                     (controller_to_rapier_dynamic_force)
                         .in_set(RapiserSet::CONTROLLER_TO_RAPIER_DYNAMIC_FORCE_SYSTEM)
-                        .after(RapiserSet::BODY_TO_VELOCITY_SYSTEM),
+                        .after(RapiserSet::BODY_TO_VELOCITY_SYSTEM)
+                        .after(RapiserSet::CREATE_MASS_FROM_RAPIER_SYSTEM),
                     (controller_to_yaw, controller_to_pitch),
                 ),
             );
@@ -165,17 +168,20 @@ pub fn body_to_velocity(
 
 pub fn create_mass_from_rapier(
     mut commands: Commands,
-    query: Query<(Entity, &ColliderMassProperties), Without<Mass>>,
+    mut context: ResMut<RapierContext>,
+    query: Query<(Entity, &RapierRigidBodyHandle), Without<Mass>>,
 ) {
-    for (entity, mass_props) in query.iter() {
-        let mut mass;
-        // FIXME: need be testing
-        match mass_props {
-            ColliderMassProperties::Density(density) => mass = density.clone(),
-            ColliderMassProperties::Mass(mass_data) => mass = mass_data.clone(),
-            ColliderMassProperties::MassProperties(porp) => mass = porp.mass,
+    let context = &mut *context;
+    for (entity, handle) in query.iter() {
+        let body = context.bodies.get(handle.0);
+        match body {
+            Some(b) => {
+                let mass_props: &RigidBodyMassProps = b.mass_properties();
+                let effective_mass = mass_props.effective_mass();
+                commands.entity(entity).insert(Mass::new(effective_mass.x));
+            }
+            None => {}
         }
-        commands.entity(entity).insert(Mass::new(mass));
     }
 }
 
