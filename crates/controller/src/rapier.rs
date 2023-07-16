@@ -1,8 +1,8 @@
 //todo 物理引擎的接入
 
 use bevy::prelude::{
-    Commands, Entity, EventReader, Input, IntoSystemConfigs, IntoSystemSetConfigs, KeyCode, Plugin,
-    PreUpdate, Query, Res, ResMut, SystemSet, Update, Vec3, With, Without,
+    App, Commands, Entity, EventReader, Input, IntoSystemConfigs, IntoSystemSetConfigs, KeyCode,
+    Plugin, PreUpdate, Query, Res, ResMut, SystemSet, Update, Vec3, With, Without,
 };
 use bevy_rapier3d::{
     prelude::{
@@ -19,7 +19,7 @@ use crate::{
         controller_to_pitch, controller_to_yaw, BodyTag, CharacterController,
         CharacterControllerPlugin, ControllerSet, Mass,
     },
-    events::ImpulseEvent,
+    events::{ForceEvent, ImpulseEvent},
 };
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
@@ -34,7 +34,7 @@ enum RapiserSet {
 pub struct RapierDynamicImpulseCharacterControllerPlugin;
 
 impl Plugin for RapierDynamicImpulseCharacterControllerPlugin {
-    fn build(&self, app: &mut bevy::prelude::App) {
+    fn build(&self, app: &mut App) {
         app.add_plugins(CharacterControllerPlugin)
             .configure_set(PreUpdate, RapiserSet::TOGGLE_FLY_MODE_SYSTEM)
             .configure_sets(
@@ -66,6 +66,41 @@ impl Plugin for RapierDynamicImpulseCharacterControllerPlugin {
     }
 }
 
+pub struct RapierDynamicForceCharacterControllerPlugin;
+
+impl Plugin for RapierDynamicForceCharacterControllerPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugins(CharacterControllerPlugin)
+            .configure_set(PreUpdate, RapiserSet::TOGGLE_FLY_MODE_SYSTEM)
+            .configure_sets(
+                Update,
+                (
+                    RapiserSet::CREATE_MASS_FROM_RAPIER_SYSTEM,
+                    RapiserSet::BODY_TO_VELOCITY_SYSTEM,
+                    RapiserSet::CONTROLLER_TO_RAPIER_DYNAMIC_FORCE_SYSTEM,
+                )
+                    .chain(),
+            )
+            .add_systems(
+                PreUpdate,
+                toggle_fly_mode
+                    .in_set(RapiserSet::TOGGLE_FLY_MODE_SYSTEM)
+                    .after(ControllerSet::INPUT_TO_EVENT),
+            )
+            .add_systems(
+                Update,
+                (
+                    (create_mass_from_rapier).in_set(RapiserSet::CREATE_MASS_FROM_RAPIER_SYSTEM),
+                    (body_to_velocity).in_set(RapiserSet::BODY_TO_VELOCITY_SYSTEM),
+                    (controller_to_rapier_dynamic_force)
+                        .in_set(RapiserSet::CONTROLLER_TO_RAPIER_DYNAMIC_FORCE_SYSTEM)
+                        .after(RapiserSet::BODY_TO_VELOCITY_SYSTEM),
+                    (controller_to_yaw, controller_to_pitch),
+                ),
+            );
+    }
+}
+
 pub fn controller_to_rapier_dynamic_impulse(
     mut impulses: EventReader<ImpulseEvent>,
     mut context: ResMut<RapierContext>,
@@ -81,6 +116,29 @@ pub fn controller_to_rapier_dynamic_impulse(
             match body {
                 Some(b) => {
                     b.apply_impulse(impulse.into(), true);
+                }
+                None => {}
+            }
+        }
+    }
+}
+
+pub fn controller_to_rapier_dynamic_force(
+    mut forces: EventReader<ForceEvent>,
+    mut context: ResMut<RapierContext>,
+    mut query: Query<(&RapierRigidBodyHandle), With<BodyTag>>,
+) {
+    let mut force = Vec3::ZERO;
+    for event in forces.iter() {
+        force += **event;
+    }
+
+    if force.length_squared() > 1E-6 {
+        for ele in query.iter_mut() {
+            let body = context.bodies.get_mut(ele.0);
+            match body {
+                Some(b) => {
+                    b.add_force(force.into(), true);
                 }
                 None => {}
             }
