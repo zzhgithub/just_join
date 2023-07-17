@@ -2,7 +2,7 @@ use bevy::{
     prelude::{
         shape, App, Assets, BuildChildren, Camera3dBundle, ClearColor, Color, Commands,
         ComputedVisibility, GlobalTransform, Mat4, Mesh, Msaa, PbrBundle, PointLightBundle, Quat,
-        Res, ResMut, StandardMaterial, Startup, Transform, Update, Vec3, Visibility,
+        Res, ResMut, SpatialBundle, StandardMaterial, Startup, Transform, Update, Vec3, Visibility,
     },
     transform::TransformBundle,
     utils::petgraph::visit::Visitable,
@@ -45,6 +45,7 @@ pub fn main() {
             follow_offset: -Vec3::Z * 2.0, // Relative to head
             ..Default::default()
         })
+        // .insert_resource(CharacterSettings::first())
         // 设置时间类型
         .insert_resource(RapierConfiguration {
             timestep_mode: TimestepMode::Interpolated {
@@ -144,6 +145,8 @@ pub fn spawn_character(
             Transform::IDENTITY,
             CharacterController::default(),
             BodyTag,
+            Visibility::Inherited,
+            ComputedVisibility::HIDDEN,
         ))
         .insert(RigidBody::Dynamic)
         .insert(Sleeping::default())
@@ -164,6 +167,8 @@ pub fn spawn_character(
             GlobalTransform::IDENTITY,
             Transform::IDENTITY,
             YawTag,
+            Visibility::Inherited,
+            ComputedVisibility::HIDDEN,
         ))
         .id();
     let body_model = commands
@@ -198,6 +203,8 @@ pub fn spawn_character(
                 ),
             )),
             HeadTag,
+            Visibility::Inherited,
+            ComputedVisibility::HIDDEN
         ))
         .id();
     let head_model = commands
