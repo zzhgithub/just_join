@@ -3,7 +3,7 @@ use bevy::{
     prelude::{
         bevy_main, AmbientLight, App, AssetServer, Assets, Color, Commands, Component, FixedUpdate,
         MaterialPlugin, Msaa, ParamSet, PointLight, PointLightBundle, PostUpdate, PreUpdate, Query,
-        Res, ResMut, Startup, SystemSet, Transform, Update, Vec3, With, Without,
+        Res, ResMut, Startup, SystemSet, Transform, Update, Vec3, With, Without, BuildChildren,
     },
     render::render_resource::RenderPipeline,
     DefaultPlugins,
@@ -16,7 +16,7 @@ use bevy_rapier3d::{
 use chunk::generate_offset_resoure;
 use chunk_generator::{chunk_generate_system, ChunkMap};
 use clip_spheres::{update_clip_shpere_system, ClipSpheres, Sphere3};
-// use inspector_egui::inspector_ui;
+use inspector_egui::inspector_ui;
 use map_database::MapDataBase;
 use mesh_generator::{deleter_mesh_system, update_mesh_system, MeshManager, MeshTasks};
 
@@ -29,7 +29,7 @@ use ray_cast::MyRayCastPlugin;
 mod chunk;
 mod chunk_generator;
 mod clip_spheres;
-// mod inspector_egui;
+mod inspector_egui;
 mod map_database;
 mod map_generator;
 mod mesh;
@@ -60,9 +60,9 @@ fn main() {
         .add_plugins(MyRayCastPlugin)
         // 0.11.0 不能使用了
         // .add_plugin(SkyPlugin)
-        // .add_plugin(EguiPlugin)
-        // .add_plugin(bevy_inspector_egui::DefaultInspectorConfigPlugin) // adds default options and `InspectorEguiImpl`s
-        // .add_system(inspector_ui)
+        .add_plugin(EguiPlugin)
+        .add_plugin(bevy_inspector_egui::DefaultInspectorConfigPlugin) // adds default options and `InspectorEguiImpl`s
+        .add_system(inspector_ui)
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
         // .add_plugin(RapierDebugRenderPlugin::default())
         .insert_resource(Msaa::Sample4)
