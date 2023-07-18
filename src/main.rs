@@ -8,7 +8,7 @@ use bevy::{
     render::render_resource::RenderPipeline,
     DefaultPlugins,
 };
-use bevy_atmosphere::prelude::AtmospherePlugin;
+// use bevy_atmosphere::prelude::AtmospherePlugin;
 use bevy_rapier3d::{
     prelude::{NoUserData, RapierPhysicsPlugin},
     render::RapierDebugRenderPlugin,

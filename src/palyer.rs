@@ -8,7 +8,7 @@ use bevy::prelude::{
 };
 use bevy::time::Time;
 use bevy::window::{CursorGrabMode, PrimaryWindow, Window};
-use bevy_atmosphere::prelude::AtmosphereCamera;
+// use bevy_atmosphere::prelude::AtmosphereCamera;
 use bevy_egui::egui::epaint::Shadow;
 use bevy_egui::egui::{self, Color32, Pos2, Stroke};
 use bevy_egui::EguiContext;
