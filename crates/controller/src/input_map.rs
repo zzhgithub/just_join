@@ -1,6 +1,6 @@
 use bevy::input::keyboard::KeyCode;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct InputMap {
     pub key_forward: KeyCode,
     pub key_backward: KeyCode,
@@ -15,6 +15,7 @@ pub struct InputMap {
     pub key_fly: KeyCode,
     pub key_fly_up: KeyCode,
     pub key_fly_down: KeyCode,
+    pub toggle_grab_cursor: KeyCode,
 }
 
 impl Default for InputMap {
@@ -33,6 +34,7 @@ impl Default for InputMap {
             key_fly: KeyCode::F,
             key_fly_up: KeyCode::E,
             key_fly_down: KeyCode::Q,
+            toggle_grab_cursor: KeyCode::Escape,
         }
     }
 }

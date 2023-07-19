@@ -249,7 +249,7 @@ fn setup_player(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 // 添加中心十字
-fn egui_center_cursor_system(
+pub fn egui_center_cursor_system(
     mut egui_context_q: Query<&mut EguiContext, With<PrimaryWindow>>,
     window_qurey: Query<&mut Window, With<PrimaryWindow>>,
 ) {

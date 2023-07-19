@@ -47,14 +47,14 @@ pub fn main() {
         })
         // .insert_resource(CharacterSettings::first())
         // 设置时间类型
-        .insert_resource(RapierConfiguration {
-            timestep_mode: TimestepMode::Interpolated {
-                dt: 1. / 60.,
-                time_scale: 1.,
-                substeps: 1,
-            },
-            ..Default::default()
-        })
+        // .insert_resource(RapierConfiguration {
+        //     timestep_mode: TimestepMode::Interpolated {
+        //         dt: 1. / 60.,
+        //         time_scale: 1.,
+        //         substeps: 1,
+        //     },
+        //     ..Default::default()
+        // })
         .add_systems(Startup, (spawn_world, spawn_character))
         .add_systems(Update, (controller_to_yaw, controller_to_pitch))
         .run();
@@ -139,6 +139,8 @@ pub fn spawn_character(
 
     let body_tmf = 0.5 * (box_y + character_settings.scale.y) * Vec3::Y;
 
+
+    let body_tmf = Vec3::new(0., 10., 0.);
     let body = commands
         .spawn((
             GlobalTransform::IDENTITY,
@@ -204,7 +206,7 @@ pub fn spawn_character(
             )),
             HeadTag,
             Visibility::Inherited,
-            ComputedVisibility::HIDDEN
+            ComputedVisibility::HIDDEN,
         ))
         .id();
     let head_model = commands

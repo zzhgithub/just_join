@@ -1,5 +1,4 @@
-use bevy::prelude::{Resource, Vec3, Component};
-
+use bevy::prelude::{Component, Resource, Vec3};
 
 #[derive(Resource)]
 pub struct CharacterSettings {
@@ -8,6 +7,7 @@ pub struct CharacterSettings {
     pub head_yaw: f32,
     pub follow_offset: Vec3,
     pub focal_point: Vec3,
+    pub body_position: Vec3,
 }
 
 impl Default for CharacterSettings {
@@ -18,6 +18,7 @@ impl Default for CharacterSettings {
             head_yaw: 0.0,
             follow_offset: Vec3::new(0.0, 4.0, 8.0), // Relative to head
             focal_point: Vec3::ZERO,                 // Relative to head
+            body_position: Vec3::ZERO,
         }
     }
 }

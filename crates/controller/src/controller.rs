@@ -1,10 +1,10 @@
 use bevy::{
     prelude::{
-        Component, EventReader, EventWriter, Input, IntoSystemConfigs,
-        IntoSystemSetConfigs, KeyCode, Plugin, PreUpdate, Quat, Query, Res, SystemSet, Transform,
-        Vec3, With,
+        warn, Component, EventReader, EventWriter, Input, IntoSystemConfigs, IntoSystemSetConfigs,
+        KeyCode, Plugin, PreUpdate, Quat, Query, Res, Startup, SystemSet, Transform, Vec3, With,
     },
     time::Time,
+    window::{CursorGrabMode, PrimaryWindow, Window},
 };
 
 use crate::{
@@ -47,6 +47,7 @@ impl Plugin for CharacterControllerPlugin {
             .add_event::<ImpulseEvent>()
             .add_event::<ForceEvent>()
             .init_resource::<MouseSettings>()
+            .add_systems(Startup, initial_grab_cursor)
             .configure_sets(
                 PreUpdate,
                 // chain() will ensure sets run in the order they are listed
@@ -60,6 +61,7 @@ impl Plugin for CharacterControllerPlugin {
             .add_systems(
                 PreUpdate,
                 (
+                    cursor_grab,
                     (input_to_events).in_set(ControllerSet::INPUT_TO_EVENT),
                     (input_to_look)
                         .in_set(ControllerSet::INPUT_TO_LOOK)
@@ -73,7 +75,7 @@ impl Plugin for CharacterControllerPlugin {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct InputState {
     pub forward: bool,
     pub backward: bool,
@@ -85,7 +87,7 @@ pub struct InputState {
     pub down: bool,
 }
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, Clone, Copy)]
 pub struct CharacterController {
     pub input_map: InputMap,
     pub fly: bool,
@@ -286,5 +288,45 @@ pub fn controller_to_pitch(
         for mut transform in query.iter_mut() {
             transform.rotation = Quat::from_rotation_x(**pitch);
         }
+    }
+}
+
+// 初始化光标
+fn initial_grab_cursor(mut primary_window: Query<&mut Window, With<PrimaryWindow>>) {
+    if let Ok(mut window) = primary_window.get_single_mut() {
+        toggle_grab_cursor(&mut window);
+    } else {
+        warn!("Primary window not found for `initial_grab_cursor`!");
+    }
+}
+
+/// Grabs/ungrabs mouse cursor
+fn toggle_grab_cursor(window: &mut Window) {
+    match window.cursor.grab_mode {
+        CursorGrabMode::None => {
+            window.cursor.grab_mode = CursorGrabMode::Confined;
+            window.cursor.visible = false;
+        }
+        _ => {
+            window.cursor.grab_mode = CursorGrabMode::None;
+            window.cursor.visible = true;
+        }
+    }
+}
+
+// 光标显示或者隐藏系统
+fn cursor_grab(
+    keys: Res<Input<KeyCode>>,
+    controller_query: Query<(&CharacterController)>,
+    mut primary_window: Query<&mut Window, With<PrimaryWindow>>,
+) {
+    let controller = controller_query.single();
+    let input_map = controller.input_map;
+    if let Ok(mut window) = primary_window.get_single_mut() {
+        if keys.just_pressed(input_map.toggle_grab_cursor) {
+            toggle_grab_cursor(&mut window);
+        }
+    } else {
+        warn!("Primary window not found for `cursor_grab`!");
     }
 }

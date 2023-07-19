@@ -16,6 +16,7 @@ use bevy_rapier3d::{
 use chunk::generate_offset_resoure;
 use chunk_generator::{chunk_generate_system, ChunkMap};
 use clip_spheres::{update_clip_shpere_system, ClipSpheres, Sphere3};
+use controller::controller::HeadTag;
 use inspector_egui::inspector_ui;
 use map_database::MapDataBase;
 use mesh_generator::{deleter_mesh_system, update_mesh_system, MeshManager, MeshTasks};
@@ -23,6 +24,7 @@ use mesh_generator::{deleter_mesh_system, update_mesh_system, MeshManager, MeshT
 use bevy_egui::EguiPlugin;
 use mesh_material::{BindlessMaterial, MaterialStorge};
 use palyer::{PlayerController, PlayerPlugin};
+use player_controller::PlayerControllerPlugin;
 use ray_cast::MyRayCastPlugin;
 // use sky::SkyPlugin;
 
@@ -39,6 +41,7 @@ mod palyer;
 mod ray_cast;
 // mod sky;
 mod voxel;
+mod player_controller;
 
 pub type SmallKeyHashMap<K, V> = ahash::AHashMap<K, V>;
 
@@ -55,15 +58,16 @@ fn main() {
     app_builder
         .add_plugins(DefaultPlugins)
         .add_plugins(MaterialPlugin::<BindlessMaterial>::default())
-        .add_plugins(PlayerPlugin)
+        // .add_plugins(PlayerPlugin)
         //FIXME: 这个物品获取又基本无效了 物理引擎不能识别到碰撞了
         .add_plugins(MyRayCastPlugin)
         // 0.11.0 不能使用了
         // .add_plugin(SkyPlugin)
-        .add_plugin(EguiPlugin)
-        .add_plugin(bevy_inspector_egui::DefaultInspectorConfigPlugin) // adds default options and `InspectorEguiImpl`s
+        .add_plugins(EguiPlugin)
+        .add_plugins(bevy_inspector_egui::DefaultInspectorConfigPlugin) // adds default options and `InspectorEguiImpl`s
         .add_system(inspector_ui)
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
+        .add_plugins(PlayerControllerPlugin)
         // .add_plugin(RapierDebugRenderPlugin::default())
         .insert_resource(Msaa::Sample4)
         // 这里是设置了UI
@@ -73,7 +77,7 @@ fn main() {
         .add_systems(PostUpdate, deleter_mesh_system)
         .add_systems(FixedUpdate, update_mesh_system)
         // 测试时使用的光源跟随
-        .add_systems(Update, light_follow_camera_system::<PlayerController>)
+        .add_systems(Update, light_follow_camera_system::<HeadTag>)
         .run();
 }
 
