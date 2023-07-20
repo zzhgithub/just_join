@@ -9,7 +9,7 @@ edition = "2021"
 bevy = "0.11.0"
 block-mesh = "0.2.0"
 ndshape = "0.3.0"
-ahash = { version = "0.7", features = ["serde"] }
+ahash = { version = "0.8.3", features = ["serde"] }
 futures-lite = "1.13.0"
 # bevy_flycam = "0.10.1"
 bevy-inspector-egui = "0.19.0"
@@ -22,3 +22,10 @@ bevy_rapier3d = "0.22.0"
 # bevy_atmosphere = "0.6.0"
 
 controller = { path = "crates/controller", version = "0.1.0" }
+
+
+[profile.dev.package.bevy_rapier3d]
+opt-level = 3
+
+[profile.release]
+codegen-units = 1

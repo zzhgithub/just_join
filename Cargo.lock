@@ -94,7 +94,6 @@ checksum = "fcb51a0695d8f838b1ee009b3fbf66bda078cd64590202a864a8f3e8c4315c47"
 dependencies = [
  "getrandom",
  "once_cell",
- "serde",
  "version_check",
 ]
 
@@ -107,6 +106,7 @@ dependencies = [
  "cfg-if 1.0.0",
  "getrandom",
  "once_cell",
+ "serde",
  "version_check",
 ]
 
@@ -3147,7 +3147,7 @@ checksum = "332cd62e95873ea4f41f3dfd6bbbfc5b52aec892d7e8d534197c4720a0bbbab2"
 name = "project-H"
 version = "0.1.0"
 dependencies = [
- "ahash 0.7.6",
+ "ahash 0.8.3",
  "bevy",
  "bevy-inspector-egui",
  "bevy_egui",
