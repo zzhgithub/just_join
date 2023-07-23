@@ -213,7 +213,10 @@ pub fn chunk_generate_system(
         move |key| {
             // 这里要判断一下获取的方法
             // chunk_map.gen_chunk_data(key);
-            chunk_map.write_chunk(key, db.find_by_chunk_key(key));
+            if !chunk_map.map_data.contains_key(&key) {
+                //  这里可以判断一下是否是 已经加载的数据
+                chunk_map.write_chunk(key, db.find_by_chunk_key(key));
+            }
         },
     );
 }
