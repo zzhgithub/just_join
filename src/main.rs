@@ -46,7 +46,7 @@ mod player_controller;
 pub type SmallKeyHashMap<K, V> = ahash::AHashMap<K, V>;
 
 // const zone
-pub const VIEW_RADIUS: f32 = 40.00;
+pub const VIEW_RADIUS: f32 = 120.00;
 pub const CHUNK_SIZE: i32 = 16;
 // 贴图个数
 pub const MAX_TEXTURE_COUNT: usize = 4;
