@@ -19,7 +19,7 @@ serde = "1.0.164"
 bincode = "1.3.3"
 simdnoise = "3.1.6"
 bevy_rapier3d = "0.22.0"
-# bevy_atmosphere = "0.6.0"
+bevy_atmosphere = "0.7.0"
 
 controller = { path = "crates/controller", version = "0.1.0" }
 
@@ -29,6 +29,3 @@ opt-level = 3
 
 [profile.release]
 codegen-units = 1
-
-[profile.dev]
-opt-level = 1

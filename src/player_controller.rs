@@ -1,11 +1,12 @@
 use bevy::{
     prelude::{
-        shape, App, Assets, BuildChildren, Camera3dBundle, ClearColor, Color, Commands,
+        shape, App, Assets, BuildChildren, Camera3dBundle, ClearColor, Color, Commands, Component,
         ComputedVisibility, GlobalTransform, Mat4, Mesh, PbrBundle, Plugin, Quat, Res, ResMut,
         StandardMaterial, Startup, Transform, Update, Vec3, Visibility,
     },
     transform::TransformBundle,
 };
+use bevy_atmosphere::prelude::AtmosphereCamera;
 use bevy_rapier3d::prelude::{Collider, ColliderMassProperties, LockedAxes, RigidBody, Sleeping};
 use controller::{
     controller::{
@@ -64,6 +65,7 @@ pub fn spawn_character(
             BodyTag,
             Visibility::Inherited,
             ComputedVisibility::HIDDEN,
+            PlayerMe,
         ))
         .insert(RigidBody::Dynamic)
         .insert(Sleeping::default())
@@ -144,6 +146,7 @@ pub fn spawn_character(
             )),
             ..Default::default()
         })
+        .insert(AtmosphereCamera::default())
         .insert((LookDirection::default(), CameraTag))
         .id();
     commands
@@ -157,3 +160,6 @@ pub fn spawn_character(
     // FIXME: 后面可以改成HeadTag进行查询
     commands.insert_resource(PlayerStorge(head));
 }
+
+#[derive(Debug, Component)]
+pub struct PlayerMe;

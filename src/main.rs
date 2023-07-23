@@ -1,9 +1,10 @@
 use bevy::{
     pbr::{wireframe::WireframePlugin, DirectionalLightShadowMap, Shadow},
     prelude::{
-        bevy_main, AmbientLight, App, AssetServer, Assets, Color, Commands, Component, FixedUpdate,
-        MaterialPlugin, Msaa, ParamSet, PointLight, PointLightBundle, PostUpdate, PreUpdate, Query,
-        Res, ResMut, Startup, SystemSet, Transform, Update, Vec3, With, Without, BuildChildren,
+        bevy_main, AmbientLight, App, AssetServer, Assets, BuildChildren, Camera3d, Color,
+        Commands, Component, FixedUpdate, MaterialPlugin, Msaa, ParamSet, PointLight,
+        PointLightBundle, PostUpdate, PreUpdate, Query, Res, ResMut, Startup, SystemSet, Transform,
+        Update, Vec3, With, Without,
     },
     render::render_resource::RenderPipeline,
     DefaultPlugins,
@@ -16,7 +17,7 @@ use bevy_rapier3d::{
 use chunk::generate_offset_resoure;
 use chunk_generator::{chunk_generate_system, ChunkMap};
 use clip_spheres::{update_clip_shpere_system, ClipSpheres, Sphere3};
-use controller::controller::HeadTag;
+use controller::controller::{CameraTag, HeadTag};
 use inspector_egui::inspector_ui;
 use map_database::MapDataBase;
 use mesh_generator::{deleter_mesh_system, update_mesh_system, MeshManager, MeshTasks};
@@ -24,8 +25,9 @@ use mesh_generator::{deleter_mesh_system, update_mesh_system, MeshManager, MeshT
 use bevy_egui::EguiPlugin;
 use mesh_material::{BindlessMaterial, MaterialStorge};
 use palyer::{PlayerController, PlayerPlugin};
-use player_controller::PlayerControllerPlugin;
+use player_controller::{PlayerControllerPlugin, PlayerMe};
 use ray_cast::MyRayCastPlugin;
+use sky::SkyPlugin;
 // use sky::SkyPlugin;
 
 mod chunk;
@@ -38,10 +40,10 @@ mod mesh;
 mod mesh_generator;
 mod mesh_material;
 mod palyer;
-mod ray_cast;
-// mod sky;
-mod voxel;
 mod player_controller;
+mod ray_cast;
+mod sky;
+mod voxel;
 
 pub type SmallKeyHashMap<K, V> = ahash::AHashMap<K, V>;
 
@@ -60,9 +62,9 @@ fn main() {
         .add_plugins(MaterialPlugin::<BindlessMaterial>::default())
         // .add_plugins(PlayerPlugin)
         //FIXME: 这个物品获取又基本无效了 物理引擎不能识别到碰撞了
-        .add_plugins(MyRayCastPlugin)
+        // .add_plugins(MyRayCastPlugin)
         // 0.11.0 不能使用了
-        // .add_plugin(SkyPlugin)
+        .add_plugins(SkyPlugin)
         .add_plugins(EguiPlugin)
         .add_plugins(bevy_inspector_egui::DefaultInspectorConfigPlugin) // adds default options and `InspectorEguiImpl`s
         .add_system(inspector_ui)
@@ -72,8 +74,8 @@ fn main() {
         .insert_resource(Msaa::Sample4)
         // 这里是设置了UI
         .add_systems(Startup, setup)
-        .add_systems(PreUpdate, update_clip_shpere_system::<PlayerController>)
         .add_systems(PreUpdate, chunk_generate_system)
+        .add_systems(PreUpdate, update_clip_shpere_system::<PlayerMe>)
         .add_systems(PostUpdate, deleter_mesh_system)
         .add_systems(FixedUpdate, update_mesh_system)
         // 测试时使用的光源跟随
