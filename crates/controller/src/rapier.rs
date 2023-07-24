@@ -118,9 +118,12 @@ pub fn controller_to_rapier_dynamic_impulse(
             let body = context.bodies.get_mut(ele.0);
             match body {
                 Some(b) => {
+                    // println!("impulse is {:?}", impulse);
                     b.apply_impulse(impulse.into(), true);
                 }
-                None => {}
+                None => {
+                    println!("RigidBody not find");
+                }
             }
         }
     }

@@ -1,13 +1,17 @@
 use bevy::{
     prelude::{
         shape, App, Assets, BuildChildren, Camera3dBundle, ClearColor, Color, Commands, Component,
-        ComputedVisibility, GlobalTransform, Mat4, Mesh, PbrBundle, Plugin, Quat, Res, ResMut,
-        StandardMaterial, Startup, Transform, Update, Vec3, Visibility,
+        ComputedVisibility, Entity, GlobalTransform, Input, KeyCode, Mat4, Mesh, PbrBundle, Plugin,
+        PreUpdate, Quat, Query, Res, ResMut, StandardMaterial, Startup, Transform, Update, Vec3,
+        Visibility,
     },
     transform::TransformBundle,
 };
 use bevy_atmosphere::prelude::AtmosphereCamera;
-use bevy_rapier3d::prelude::{Collider, ColliderMassProperties, LockedAxes, RigidBody, Sleeping};
+use bevy_rapier3d::prelude::{
+    Collider, ColliderMassProperties, LockedAxes, NoUserData, RapierPhysicsPlugin, RigidBody,
+    Sleeping,
+};
 use controller::{
     controller::{
         controller_to_pitch, controller_to_yaw, BodyTag, CameraTag, CharacterController, HeadTag,
@@ -37,6 +41,7 @@ impl Plugin for PlayerControllerPlugin {
             })
             // .insert_resource(CharacterSettings::first())
             .add_systems(Startup, spawn_character)
+            .add_systems(PreUpdate, toggle_third_person)
             .add_systems(
                 Update,
                 (
@@ -106,7 +111,7 @@ pub fn spawn_character(
                     0.0,
                 ),
             )),
-            visibility: Visibility::Visible,
+            visibility: Visibility::Inherited,
             ..Default::default()
         })
         .id();
@@ -133,7 +138,7 @@ pub fn spawn_character(
             material: red,
             mesh: cube,
             transform: Transform::from_scale(Vec3::splat(character_settings.head_scale)),
-            visibility: Visibility::Visible,
+            visibility: Visibility::Inherited,
             ..Default::default()
         })
         .id();
@@ -145,6 +150,11 @@ pub fn spawn_character(
                 Vec3::Y,
             )),
             ..Default::default()
+        })
+        .insert(ThirdPerson {
+            is_third_person: true,
+            body: body,
+            head: head,
         })
         .insert(AtmosphereCamera::default())
         .insert((LookDirection::default(), CameraTag))
@@ -163,3 +173,41 @@ pub fn spawn_character(
 
 #[derive(Debug, Component)]
 pub struct PlayerMe;
+
+#[derive(Debug, Component)]
+struct ThirdPerson {
+    pub is_third_person: bool,
+    pub body: Entity,
+    pub head: Entity,
+}
+
+fn toggle_third_person(
+    keyboard_input: Res<Input<KeyCode>>,
+    mut camera_transforms: Query<(&mut Transform, &mut ThirdPerson)>,
+    mut models: Query<&mut Visibility>,
+) {
+    if keyboard_input.just_pressed(KeyCode::T) {
+        for (mut camera_transform, mut third_person) in camera_transforms.iter_mut() {
+            third_person.is_third_person = !third_person.is_third_person;
+            *camera_transform = Transform::from_matrix(if third_person.is_third_person {
+                if let Ok(mut visible) = models.get_mut(third_person.body) {
+                    *visible = Visibility::Inherited;
+                }
+                if let Ok(mut visible) = models.get_mut(third_person.head) {
+                    *visible = Visibility::Inherited;
+                }
+                let eye = -Vec3::Z * 2.0;
+                let center = -Vec3::Z * 10.0;
+                Mat4::look_to_rh(eye, center, Vec3::Y)
+            } else {
+                if let Ok(mut visible) = models.get_mut(third_person.body) {
+                    *visible = Visibility::Hidden;
+                }
+                if let Ok(mut visible) = models.get_mut(third_person.head) {
+                    *visible = Visibility::Hidden;
+                }
+                Mat4::look_to_rh(Vec3::ZERO, -Vec3::Z, Vec3::Y)
+            });
+        }
+    }
+}
