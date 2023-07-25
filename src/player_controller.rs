@@ -10,7 +10,7 @@ use bevy::{
 use bevy_atmosphere::prelude::AtmosphereCamera;
 use bevy_rapier3d::prelude::{
     Collider, ColliderMassProperties, LockedAxes, NoUserData, RapierPhysicsPlugin, RigidBody,
-    Sleeping,
+    Sleeping, Ccd,
 };
 use controller::{
     controller::{
@@ -73,6 +73,7 @@ pub fn spawn_character(
             PlayerMe,
         ))
         .insert(RigidBody::Dynamic)
+        .insert(Ccd::enabled())
         .insert(Sleeping::default())
         .insert(TransformBundle::from(Transform::from_xyz(
             character_settings.body_position.x,
