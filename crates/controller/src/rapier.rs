@@ -159,12 +159,18 @@ pub fn body_to_velocity(
     let context = &mut *context;
     for (velocity, mut controller) in query.iter_mut() {
         // controller.velocity = velocity.linvel.into();
-        let body = context.bodies.get(velocity.0);
-        match body {
-            Some(b) => {
-                controller.velocity = (*b.linvel()).into();
+        let body = context.bodies.get_mut(velocity.0);
+        let b = body.unwrap();
+        controller.velocity = (*b.linvel()).into();
+        let speed = controller.velocity.distance_squared(Vec3::ZERO);
+        if (speed >= 300.) {
+            if (!b.is_ccd_enabled()) {
+                b.enable_ccd(true);
             }
-            None => {}
+        } else {
+            if (b.is_ccd_enabled()) {
+                b.enable_ccd(false);
+            }
         }
     }
 }

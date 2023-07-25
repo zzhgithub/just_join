@@ -73,7 +73,7 @@ pub fn spawn_character(
             PlayerMe,
         ))
         .insert(RigidBody::Dynamic)
-        .insert(Ccd::enabled())
+        // .insert(Ccd::disabled())
         .insert(Sleeping::default())
         .insert(TransformBundle::from(Transform::from_xyz(
             character_settings.body_position.x,
