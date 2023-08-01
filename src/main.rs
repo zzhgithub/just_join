@@ -7,7 +7,7 @@ use bevy::{
         Update, Vec3, With, Without,
     },
     render::render_resource::RenderPipeline,
-    DefaultPlugins,
+    DefaultPlugins, reflect::FromReflect,
 };
 // use bevy_atmosphere::prelude::AtmospherePlugin;
 use bevy_rapier3d::{
@@ -28,6 +28,8 @@ use palyer::{PlayerController, PlayerPlugin};
 use player_controller::{PlayerControllerPlugin, PlayerMe};
 use ray_cast::MyRayCastPlugin;
 use sky::SkyPlugin;
+use structopt::StructOpt;
+use voxel_config::VoxelMaterialToolPulgin;
 // use sky::SkyPlugin;
 
 mod chunk;
@@ -44,6 +46,7 @@ mod player_controller;
 mod ray_cast;
 mod sky;
 mod voxel;
+mod voxel_config;
 
 pub type SmallKeyHashMap<K, V> = ahash::AHashMap<K, V>;
 
@@ -53,34 +56,52 @@ pub const CHUNK_SIZE: i32 = 16;
 // 贴图个数
 pub const MAX_TEXTURE_COUNT: usize = 4;
 
+#[derive(Debug, StructOpt)]
+enum RunMode {
+    Tool,
+}
+
 #[bevy_main]
 fn main() {
     let mut app_builder = App::new();
 
-    app_builder
-        .add_plugins(DefaultPlugins)
-        .add_plugins(MaterialPlugin::<BindlessMaterial>::default())
-        // .add_plugins(PlayerPlugin)
-        //FIXME: 这个物品获取又基本无效了 物理引擎不能识别到碰撞了
-        // .add_plugins(MyRayCastPlugin)
-        // 0.11.0 不能使用了
-        .add_plugins(SkyPlugin)
-        .add_plugins(EguiPlugin)
-        .add_plugins(bevy_inspector_egui::DefaultInspectorConfigPlugin) // adds default options and `InspectorEguiImpl`s
-        .add_system(inspector_ui)
-        .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
-        .add_plugins(PlayerControllerPlugin)
-        // .add_plugin(RapierDebugRenderPlugin::default())
-        .insert_resource(Msaa::Sample4)
-        // 这里是设置了UI
-        .add_systems(Startup, setup)
-        .add_systems(PreUpdate, chunk_generate_system)
-        .add_systems(PreUpdate, update_clip_shpere_system::<PlayerMe>)
-        .add_systems(PostUpdate, deleter_mesh_system)
-        .add_systems(FixedUpdate, update_mesh_system)
-        // 测试时使用的光源跟随
-        .add_systems(Update, light_follow_camera_system::<HeadTag>)
-        .run();
+    match RunMode::from_args() {
+        RunMode::Tool => {
+            app_builder
+                .add_plugins(DefaultPlugins)
+                .add_plugins(MaterialPlugin::<BindlessMaterial>::default())
+                .add_plugins(EguiPlugin)
+                .add_plugins(bevy_inspector_egui::DefaultInspectorConfigPlugin)
+                .add_plugins(VoxelMaterialToolPulgin)
+                .run();
+        }
+        _ => {
+            app_builder
+                .add_plugins(DefaultPlugins)
+                .add_plugins(MaterialPlugin::<BindlessMaterial>::default())
+                // .add_plugins(PlayerPlugin)
+                //FIXME: 这个物品获取又基本无效了 物理引擎不能识别到碰撞了
+                // .add_plugins(MyRayCastPlugin)
+                // 0.11.0 不能使用了
+                .add_plugins(SkyPlugin)
+                .add_plugins(EguiPlugin)
+                .add_plugins(bevy_inspector_egui::DefaultInspectorConfigPlugin) // adds default options and `InspectorEguiImpl`s
+                .add_system(inspector_ui)
+                .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
+                .add_plugins(PlayerControllerPlugin)
+                // .add_plugin(RapierDebugRenderPlugin::default())
+                .insert_resource(Msaa::Sample4)
+                // 这里是设置了UI
+                .add_systems(Startup, setup)
+                .add_systems(PreUpdate, chunk_generate_system)
+                .add_systems(PreUpdate, update_clip_shpere_system::<PlayerMe>)
+                .add_systems(PostUpdate, deleter_mesh_system)
+                .add_systems(FixedUpdate, update_mesh_system)
+                // 测试时使用的光源跟随
+                .add_systems(Update, light_follow_camera_system::<HeadTag>)
+                .run();
+        }
+    }
 }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]

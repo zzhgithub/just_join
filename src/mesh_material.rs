@@ -187,4 +187,22 @@ impl MaterialStorge {
         let mat = materials.add(BindlessMaterial { textures });
         Self(mat)
     }
+
+    pub fn init_with_files(
+        asset_server: Res<AssetServer>,
+        mut materials: ResMut<Assets<BindlessMaterial>>,
+        files: Vec<String>,
+    ) -> Self {
+        let textures: Vec<_> = files
+            .iter()
+            .map(|path| {
+                // 这里是文件生成的规则 0x,xx
+                // > 0 表示 用0补齐两位
+                asset_server.load(path)
+            })
+            .collect();
+        // 这个东西 可以后续的处理！
+        let mat = materials.add(BindlessMaterial { textures });
+        Self(mat)
+    }
 }

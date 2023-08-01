@@ -3,7 +3,10 @@ use std::f32::consts::{E, PI};
 use ndshape::{ConstShape, ConstShape2u32, ConstShape3u32};
 use simdnoise::NoiseBuilder;
 
-use crate::{chunk::ChunkKey, voxel::Voxel};
+use crate::{
+    chunk::ChunkKey,
+    voxel::{Grass, Soli, Stone, Voxel, VoxelMaterial},
+};
 
 pub fn gen_chunk_data_by_seed(seed: i32, chunk_key: ChunkKey) -> Vec<Voxel> {
     // 怎么计算出
@@ -30,11 +33,11 @@ pub fn gen_chunk_data_by_seed(seed: i32, chunk_key: ChunkKey) -> Vec<Voxel> {
         let index = PanleShap::linearize([x, z]);
         if p_y <= h + noise[index as usize] * 10.0 {
             if p_y < 5.0 {
-                voxels.push(Voxel::soil);
+                voxels.push(Soli::into_voxel());
             } else if p_y < 7.0 {
-                voxels.push(Voxel::grass);
+                voxels.push(Grass::into_voxel());
             } else {
-                voxels.push(Voxel::stone);
+                voxels.push(Stone::into_voxel());
             }
         } else {
             voxels.push(Voxel::EMPTY);

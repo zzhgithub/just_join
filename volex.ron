@@ -1,0 +1,1 @@
+(voxels:{3:(type_name:"Grass",type_ch_name:"草方块",default:(index:0,path:""),normal:{}),1:(type_name:"Stone",type_ch_name:"岩石块",default:(index:0,path:""),normal:{}),2:(type_name:"Soli",type_ch_name:"土壤",default:(index:0,path:""),normal:{})},files:["textures/002.png","textures/003.png","textures/001.png","textures/004.png"])

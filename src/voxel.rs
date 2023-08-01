@@ -35,3 +35,31 @@ impl MergeVoxel for Voxel {
         return self.id;
     }
 }
+
+pub trait VoxelMaterial {
+    const ID: u8;
+
+    fn into_voxel() -> Voxel {
+        Voxel { id: Self::ID }
+    }
+}
+
+// 用来生成材质宏
+#[macro_export]
+macro_rules! voxel_material {
+    ($types: ident,$ch_name: ident,$id: expr) => {
+        pub struct $types;
+        impl $types {
+            pub const NAME: &'static str = stringify!($types);
+            pub const CN_NAME: &'static str = stringify!($ch_name);
+        }
+        impl $crate::voxel::VoxelMaterial for $types {
+            const ID: u8 = $id;
+        }
+    };
+}
+
+voxel_material!(Empty, 空气, 0);
+voxel_material!(Stone, 岩石块, 1);
+voxel_material!(Soli, 土壤, 2);
+voxel_material!(Grass, 草方块, 3);
