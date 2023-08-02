@@ -19,6 +19,7 @@ use crate::{
     mesh::gen_mesh,
     mesh_material::MaterialStorge,
     voxel::Voxel,
+    voxel_config::MaterailConfiguration,
     SmallKeyHashMap, CHUNK_SIZE, VIEW_RADIUS,
 };
 
@@ -42,6 +43,7 @@ pub fn update_mesh_system(
     mut mesh_assets: ResMut<Assets<Mesh>>,
     mut mesh_task: ResMut<MeshTasks>,
     materials: Res<MaterialStorge>,
+    material_config: Res<MaterailConfiguration>,
 ) {
     let pool = AsyncComputeTaskPool::get();
     for ele in mesh_task.tasks.drain(..) {
@@ -81,7 +83,7 @@ pub fn update_mesh_system(
             // 无论如何都插入进去 放置下次重复检查
             mesh_manager.fast_key.insert(key);
             let volexs = chunk_map.get_with_neighbor_full_y(key);
-            match gen_mesh(volexs.to_owned()) {
+            match gen_mesh(volexs.to_owned(), material_config.clone()) {
                 Some((render_mesh, collider)) => {
                     let task = pool.spawn(async move { (key, render_mesh, collider) });
                     mesh_task.tasks.push(task);

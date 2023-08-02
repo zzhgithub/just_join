@@ -6,8 +6,9 @@ use bevy::{
         PointLightBundle, PostUpdate, PreUpdate, Query, Res, ResMut, Startup, SystemSet, Transform,
         Update, Vec3, With, Without,
     },
+    reflect::FromReflect,
     render::render_resource::RenderPipeline,
-    DefaultPlugins, reflect::FromReflect,
+    DefaultPlugins,
 };
 // use bevy_atmosphere::prelude::AtmospherePlugin;
 use bevy_rapier3d::{
@@ -29,7 +30,7 @@ use player_controller::{PlayerControllerPlugin, PlayerMe};
 use ray_cast::MyRayCastPlugin;
 use sky::SkyPlugin;
 use structopt::StructOpt;
-use voxel_config::VoxelMaterialToolPulgin;
+use voxel_config::{MaterailConfiguration, VoxelMaterialToolPulgin};
 // use sky::SkyPlugin;
 
 mod chunk;
@@ -126,6 +127,13 @@ fn setup(
     };
     commands.insert_resource(clip_spheres);
 
+    // 加载贴图的配置项
+    let config = MaterailConfiguration::new()
+        .read_file(String::from("volex.ron"))
+        .unwrap();
+
+    commands.insert_resource(config.clone());
+
     // init resource of chunkKey offset
     commands.insert_resource(generate_offset_resoure(VIEW_RADIUS));
 
@@ -145,7 +153,11 @@ fn setup(
     commands.insert_resource(db);
 
     // 加载材质图案
-    commands.insert_resource(MaterialStorge::init(asset_server, materials));
+    commands.insert_resource(MaterialStorge::init_with_files(
+        asset_server,
+        materials,
+        config.files.clone(),
+    ));
 
     // 添加氛围光
     // commands.insert_resource(AmbientLight {

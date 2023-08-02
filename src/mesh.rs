@@ -9,9 +9,14 @@ use bevy_rapier3d::prelude::Collider;
 use block_mesh::{greedy_quads, GreedyQuadsBuffer, RIGHT_HANDED_Y_UP_CONFIG};
 use ndshape::{ConstShape, ConstShape3u32};
 
-use crate::{mesh_material::ATTRIBUTE_DATA, voxel::Voxel, CHUNK_SIZE};
+use crate::{
+    mesh_material::ATTRIBUTE_DATA, voxel::Voxel, voxel_config::MaterailConfiguration, CHUNK_SIZE,
+};
 
-pub fn gen_mesh(voxels: Vec<Voxel>) -> Option<(Mesh, Collider)> {
+pub fn gen_mesh(
+    voxels: Vec<Voxel>,
+    material_config: MaterailConfiguration,
+) -> Option<(Mesh, Collider)> {
     type SampleShape = ConstShape3u32<18, 256, 18>;
     let mut buffer = GreedyQuadsBuffer::new(SampleShape::SIZE as usize);
     let faces: [block_mesh::OrientedBlockFace; 6] = RIGHT_HANDED_Y_UP_CONFIG.faces;
@@ -55,9 +60,17 @@ pub fn gen_mesh(voxels: Vec<Voxel>) -> Option<(Mesh, Collider)> {
             // 这里可以生成Data???? 但是怎么知道 是那个面的？
             let index = SampleShape::linearize(quad.minimum);
 
-            let d = (block_face_normal_index as u32) << 8u32;
+            // 法向量值
+            let normol_num = (block_face_normal_index as u32) << 8u32;
+            // 贴图索引
+            let txt_index = MaterailConfiguration::find_volex_index(
+                material_config.clone(),
+                block_face_normal_index as u8,
+                &voxels[index as usize].id,
+            );
+            // voxels[index as usize].id
             // todo 这里后面要知道是那个面的方便渲染
-            data.extend_from_slice(&[d | (voxels[index as usize].id) as u32; 4]);
+            data.extend_from_slice(&[normol_num | (txt_index) as u32; 4]);
         }
     }
 
