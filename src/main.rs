@@ -59,6 +59,7 @@ pub const MAX_TEXTURE_COUNT: usize = 4;
 #[derive(Debug, StructOpt)]
 enum RunMode {
     Tool,
+    Game,
 }
 
 #[bevy_main]
@@ -75,7 +76,7 @@ fn main() {
                 .add_plugins(VoxelMaterialToolPulgin)
                 .run();
         }
-        _ => {
+        RunMode::Game => {
             app_builder
                 .add_plugins(DefaultPlugins)
                 .add_plugins(MaterialPlugin::<BindlessMaterial>::default())
