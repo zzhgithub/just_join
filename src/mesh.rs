@@ -5,10 +5,7 @@ use bevy::{
         render_resource::PrimitiveTopology,
     },
 };
-use bevy_rapier3d::{
-    na::{Const, OPoint},
-    prelude::Collider,
-};
+use bevy_rapier3d::prelude::Collider;
 use block_mesh::{greedy_quads, GreedyQuadsBuffer, RIGHT_HANDED_Y_UP_CONFIG};
 use ndshape::{ConstShape, ConstShape3u32};
 

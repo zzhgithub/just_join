@@ -198,6 +198,7 @@ impl MaterialStorge {
             .map(|path| {
                 // 这里是文件生成的规则 0x,xx
                 // > 0 表示 用0补齐两位
+                println!("加载资源{}", path);
                 asset_server.load(path)
             })
             .collect();

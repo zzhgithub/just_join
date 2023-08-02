@@ -42,7 +42,8 @@ pub fn gen_chunk_data_by_seed(seed: i32, chunk_key: ChunkKey) -> Vec<Voxel> {
         } else {
             voxels.push(Voxel::EMPTY);
         }
-
+        // todo 3D 生成山洞
+        
         // let h = (p_x * 8.0).sin() + (p_z * 8.0).cos();
         // if p_y <= noise[index as usize] * 10.0 {
         //     voxels.push(Voxel::FILLED);
