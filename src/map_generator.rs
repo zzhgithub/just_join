@@ -12,7 +12,7 @@ pub fn gen_chunk_data_by_seed(seed: i32, chunk_key: ChunkKey) -> Vec<Voxel> {
     // 怎么计算出
     // 这里浅浅的 试一下这个算法
     let base_x = (chunk_key.0.x * 16) as f32;
-    let base_y = (chunk_key.0.y * 16) as f32;
+    let base_y: f32 = (chunk_key.0.y * 16) as f32;
     let base_z = (chunk_key.0.z * 16) as f32;
     type SampleShape = ConstShape3u32<16, 16, 16>;
     type PanleShap = ConstShape2u32<16, 16>;
@@ -28,17 +28,29 @@ pub fn gen_chunk_data_by_seed(seed: i32, chunk_key: ChunkKey) -> Vec<Voxel> {
         let p_z = base_z + z as f32;
 
         // let h = ((p_x * PI / 2.0).sin() + (p_z * PI / 2.0).cos());
-        let h = 20.0 * (p_x / 200.0).sin() + 10.0 * (p_z / 100.0).cos();
+        let h = -60.;
+        //  + 10.0 * (p_x / 10.0).sin() + 10.0 * (p_z / 10.0).cos();
         //  + E.powf(p_x / 3000.0)- E.powf(p_z / 3000.0);
         // println!("({},{})", h, p_y);
         let index = PanleShap::linearize([x, z]);
-        let top = h + noise[index as usize] * 10.0 + noise2[index as usize] * 5.0;
+        let top = h + fn_height(noise[index as usize]) + noise2[index as usize] * 5.0;
+        // noise2[index as usize] * 5.0;
         if p_y <= top {
-            if p_y >= 40. {
+            if p_y >= -60. + 110. {
                 voxels.push(Sown::into_voxel());
                 continue;
             }
-            if p_y >= 35. {
+
+            // // 测试代码只看 截面
+            // if p_z < 0. {
+            //     voxels.push(Voxel::EMPTY);
+            //     continue;
+            // }
+            // if p_y >= 40. {
+            //     voxels.push(Sown::into_voxel());
+            //     continue;
+            // }
+            if p_y >= -60. + 100. {
                 voxels.push(Stone::into_voxel());
                 continue;
             }
@@ -49,8 +61,17 @@ pub fn gen_chunk_data_by_seed(seed: i32, chunk_key: ChunkKey) -> Vec<Voxel> {
             } else {
                 voxels.push(Stone::into_voxel());
             }
+            // voxels.push(Stone::into_voxel());
         } else {
             voxels.push(Voxel::EMPTY);
+        }
+    }
+    // 海平面 todo 更加优秀的还平面
+    for i in 0..SampleShape::SIZE {
+        let [x, y, z] = SampleShape::delinearize(i);
+        let base_y: f32 = (chunk_key.0.y * 16) as f32;
+        if base_y < -60. + 70. && voxels[i as usize].id == Voxel::EMPTY.id {
+            voxels[i as usize] = Water::into_voxel();
         }
     }
     //  侵蚀 洞穴
@@ -59,7 +80,7 @@ pub fn gen_chunk_data_by_seed(seed: i32, chunk_key: ChunkKey) -> Vec<Voxel> {
         // let [x, y, z] = SampleShape::delinearize(i);
         // let index = SampleShape::linearize([x, z, y]);
         let flag: f32 = noise_3d[i as usize];
-        if flag < 0.05 && flag > -0.05 {
+        if flag < 0.05 && flag > -0.05 && voxels[i as usize].id != Water::ID {
             voxels[i as usize] = Voxel::EMPTY;
         }
     }
@@ -76,8 +97,8 @@ pub fn noise2d(chunk_key: ChunkKey, seed: i32) -> Vec<f32> {
         16,
     )
     .with_seed(seed)
-    .with_freq(0.25)
-    .with_octaves(6)
+    .with_freq(0.05)
+    .with_octaves(4)
     .generate();
     noise
 }
@@ -108,9 +129,9 @@ pub fn noise2d_ridge(chunk_key: ChunkKey, seed: i32) -> Vec<f32> {
         16,
     )
     .with_seed(seed)
-    .with_freq(0.05)
+    .with_freq(0.03)
     .with_octaves(5)
-    .with_gain(2.0)
+    .with_gain(4.0)
     .with_lacunarity(0.5)
     .generate();
     noise
@@ -133,4 +154,30 @@ pub fn noise3d_2(chunk_key: ChunkKey, seed: i32) -> Vec<f32> {
     .with_octaves(6)
     .generate();
     noise
+}
+
+// 对数据进行差值处理
+pub fn fn_height(x: f32) -> f32 {
+    if x < -0.6 {
+        // print!("a{}", x);
+        return 60.;
+    }
+    if x >= -0.6 && x < -0.5 {
+        // print!("b{}", x);
+        return 60. + 150. * (x - 0.6);
+    }
+    if x >= -0.5 && x < 0.0 {
+        // print!("c{}", x);
+        return 75.;
+    }
+    if x >= 0.0 && x < 0.1 {
+        return 75. + 100. * x;
+    }
+    if x >= 0.1 && x < 0.2 {
+        return 85. + 150. * (x - 0.1);
+    }
+    if x >= 0.2 {
+        return 100. + 100. * (x - 0.2);
+    }
+    0.
 }

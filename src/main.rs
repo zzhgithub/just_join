@@ -52,7 +52,7 @@ mod voxel_config;
 pub type SmallKeyHashMap<K, V> = ahash::AHashMap<K, V>;
 
 // const zone
-pub const VIEW_RADIUS: f32 = 120.00;
+pub const VIEW_RADIUS: f32 = 300.00;
 pub const CHUNK_SIZE: i32 = 16;
 // 贴图个数
 pub const MAX_TEXTURE_COUNT: usize = 7;
@@ -90,6 +90,7 @@ fn main() {
                 .add_plugins(bevy_inspector_egui::DefaultInspectorConfigPlugin) // adds default options and `InspectorEguiImpl`s
                 .add_system(inspector_ui)
                 .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
+                // .add_plugins(PlayerPlugin)
                 .add_plugins(PlayerControllerPlugin)
                 // .add_plugin(RapierDebugRenderPlugin::default())
                 .insert_resource(Msaa::Sample4)
@@ -128,7 +129,7 @@ fn setup(
     commands.insert_resource(clip_spheres);
     // 设置一个环境光照强度
     commands.insert_resource(AmbientLight {
-        brightness: 0.06,
+        brightness: 1.06,
         ..Default::default()
     });
     // 加载贴图的配置项

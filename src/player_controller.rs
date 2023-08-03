@@ -36,7 +36,7 @@ impl Plugin for PlayerControllerPlugin {
                 focal_point: -Vec3::Z * 10.0,  // Relative to head
                 follow_offset: -Vec3::Z * 2.0, // Relative to head
                 // 这里是人物的位置
-                body_position: Vec3::new(0., 60., 0.),
+                body_position: Vec3::new(0., 300., 0.),
                 ..Default::default()
             })
             // .insert_resource(CharacterSettings::first())
