@@ -5,7 +5,7 @@ use simdnoise::NoiseBuilder;
 
 use crate::{
     chunk::ChunkKey,
-    voxel::{Grass, Soli, Sown, Stone, Voxel, VoxelMaterial},
+    voxel::{Grass, Soli, Sown, Stone, Voxel, VoxelMaterial, Water},
 };
 
 pub fn gen_chunk_data_by_seed(seed: i32, chunk_key: ChunkKey) -> Vec<Voxel> {
@@ -54,7 +54,7 @@ pub fn gen_chunk_data_by_seed(seed: i32, chunk_key: ChunkKey) -> Vec<Voxel> {
         }
     }
     //  侵蚀 洞穴
-    let noise_3d = noise3d(chunk_key, seed);
+    let noise_3d = noise3d_2(chunk_key, seed);
     for i in 0..SampleShape::SIZE {
         // let [x, y, z] = SampleShape::delinearize(i);
         // let index = SampleShape::linearize([x, z, y]);
@@ -112,6 +112,25 @@ pub fn noise2d_ridge(chunk_key: ChunkKey, seed: i32) -> Vec<f32> {
     .with_octaves(5)
     .with_gain(2.0)
     .with_lacunarity(0.5)
+    .generate();
+    noise
+}
+
+// todo: 尝试产生 洞穴的噪声
+pub fn noise3d_2(chunk_key: ChunkKey, seed: i32) -> Vec<f32> {
+    let (noise, min, max) = NoiseBuilder::fbm_3d_offset(
+        (chunk_key.0.x * 16) as f32,
+        16,
+        (chunk_key.0.y * 16) as f32,
+        16,
+        (chunk_key.0.z * 16) as f32,
+        16,
+    )
+    .with_seed(seed)
+    .with_freq(0.2)
+    .with_lacunarity(0.5)
+    .with_gain(2.0)
+    .with_octaves(6)
     .generate();
     noise
 }

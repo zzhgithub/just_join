@@ -55,7 +55,7 @@ pub type SmallKeyHashMap<K, V> = ahash::AHashMap<K, V>;
 pub const VIEW_RADIUS: f32 = 120.00;
 pub const CHUNK_SIZE: i32 = 16;
 // 贴图个数
-pub const MAX_TEXTURE_COUNT: usize = 6;
+pub const MAX_TEXTURE_COUNT: usize = 7;
 
 #[derive(Debug, StructOpt)]
 enum RunMode {
@@ -126,7 +126,11 @@ fn setup(
         new_sphere: init_shpere,
     };
     commands.insert_resource(clip_spheres);
-
+    // 设置一个环境光照强度
+    commands.insert_resource(AmbientLight {
+        brightness: 0.06,
+        ..Default::default()
+    });
     // 加载贴图的配置项
     let config = MaterailConfiguration::new()
         .read_file(String::from("volex.ron"))

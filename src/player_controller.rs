@@ -9,8 +9,8 @@ use bevy::{
 };
 use bevy_atmosphere::prelude::AtmosphereCamera;
 use bevy_rapier3d::prelude::{
-    Collider, ColliderMassProperties, LockedAxes, NoUserData, RapierPhysicsPlugin, RigidBody,
-    Sleeping, Ccd,
+    Ccd, Collider, ColliderMassProperties, LockedAxes, NoUserData, RapierPhysicsPlugin, RigidBody,
+    Sleeping,
 };
 use controller::{
     controller::{
@@ -81,10 +81,10 @@ pub fn spawn_character(
             character_settings.body_position.z,
         )))
         .insert(LockedAxes::ROTATION_LOCKED)
-        .insert(ColliderMassProperties::Density(200.0))
+        .insert(ColliderMassProperties::Density(300.0))
         .insert(Collider::capsule(
             (-0.5 * character_settings.scale.y * Vec3::Y).into(),
-            (0.5 * character_settings.scale.y * Vec3::Y).into(),
+            (0.5 * (character_settings.scale.y - 0.9) * Vec3::Y).into(),
             0.5 * character_settings.scale.x.max(character_settings.scale.z),
         ))
         // .insert(RigidBodyPositionSync::Interpolated { prev_pos: None })
