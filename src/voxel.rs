@@ -21,7 +21,8 @@ impl Voxel {
 
 impl MeshVoxel for Voxel {
     fn get_visibility(&self) -> VoxelVisibility {
-        if self.id > 0 {
+        // 这里过滤掉水
+        if self.id > 0 && self.id != 5 {
             return VoxelVisibility::Opaque;
         }
         VoxelVisibility::Empty

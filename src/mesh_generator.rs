@@ -16,7 +16,7 @@ use crate::{
     chunk::{find_chunk_keys_array_by_shpere_y_0, ChunkKey, NeighbourOffest},
     chunk_generator::ChunkMap,
     clip_spheres::ClipSpheres,
-    mesh::gen_mesh,
+    mesh::{gen_mesh, gen_mesh_water, pick_water},
     mesh_material::MaterialStorge,
     voxel::Voxel,
     voxel_config::MaterailConfiguration,
@@ -26,6 +26,7 @@ use crate::{
 #[derive(Debug, Clone, Resource, Default)]
 pub struct MeshManager {
     pub entities: SmallKeyHashMap<ChunkKey, Entity>,
+    pub water_entities: SmallKeyHashMap<ChunkKey, Entity>,
     pub fast_key: HashSet<ChunkKey>,
 }
 
@@ -54,7 +55,7 @@ pub fn gen_mesh_system(
             // 无论如何都插入进去 放置下次重复检查
             mesh_manager.fast_key.insert(key);
             let volexs: Vec<Voxel> = chunk_map.get_with_neighbor_full_y(key);
-            let task = pool.spawn(async move { (volexs, key) });
+            let task = pool.spawn(async move { (volexs.clone(), key.clone()) });
             mesh_task.tasks.push(task);
         }
     }
@@ -96,6 +97,26 @@ pub fn update_mesh_system(
                             );
                         }
                         None => {}
+                    };
+                    match gen_mesh_water(pick_water(voxels.clone()), material_config.clone()) {
+                        Some(water_mesh) => {
+                            mesh_manager.water_entities.insert(
+                                chunk_key,
+                                commands
+                                    .spawn(MaterialMeshBundle {
+                                        transform: Transform::from_xyz(
+                                            (chunk_key.0.x * CHUNK_SIZE) as f32,
+                                            -128.0,
+                                            (chunk_key.0.z * CHUNK_SIZE) as f32,
+                                        ),
+                                        mesh: mesh_assets.add(water_mesh),
+                                        material: materials.0.clone(),
+                                        ..Default::default()
+                                    })
+                                    .id(),
+                            );
+                        }
+                        None => {}
                     }
                 }
             }
@@ -127,6 +148,10 @@ pub fn deleter_mesh_system(
 
     for chunk_key in chunks_to_remove.into_iter() {
         if let Some(entity) = mesh_manager.entities.remove(&chunk_key) {
+            mesh_manager.fast_key.remove(&chunk_key);
+            commands.entity(entity).despawn();
+        }
+        if let Some(entity) = mesh_manager.water_entities.remove(&chunk_key) {
             mesh_manager.fast_key.remove(&chunk_key);
             commands.entity(entity).despawn();
         }

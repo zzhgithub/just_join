@@ -4,7 +4,7 @@ use bevy::{
         bevy_main, AmbientLight, App, AssetServer, Assets, BuildChildren, Camera3d, Color,
         Commands, Component, FixedUpdate, IntoSystemConfigs, MaterialPlugin, Msaa, ParamSet,
         PointLight, PointLightBundle, PostUpdate, PreUpdate, Query, Res, ResMut, Startup,
-        SystemSet, Transform, Update, Vec3, With, Without,
+        SystemSet, Transform, Update, Vec3, With, Without, Last,
     },
     reflect::FromReflect,
     render::render_resource::RenderPipeline,
@@ -100,10 +100,10 @@ fn main() {
                 .add_systems(Startup, setup)
                 .add_systems(PreUpdate, (chunk_generate_system, gen_mesh_system))
                 .add_systems(PreUpdate, update_clip_shpere_system::<PlayerMe>)
-                .add_systems(PostUpdate, deleter_mesh_system)
                 .add_systems(Update, update_mesh_system)
                 // 测试时使用的光源跟随
                 .add_systems(Update, light_follow_camera_system::<HeadTag>)
+                .add_systems(Last, deleter_mesh_system)
                 .run();
         }
     }

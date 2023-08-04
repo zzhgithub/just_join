@@ -55,7 +55,11 @@ pub fn gen_chunk_data_by_seed(seed: i32, chunk_key: ChunkKey) -> Vec<Voxel> {
                 continue;
             }
             if p_y >= top - 1.0 {
-                voxels.push(Grass::into_voxel());
+                if (p_y < -60. + 70.) {
+                    voxels.push(Soli::into_voxel());
+                } else {
+                    voxels.push(Grass::into_voxel());
+                }
             } else if p_y > top - 5.0 {
                 voxels.push(Soli::into_voxel());
             } else {
