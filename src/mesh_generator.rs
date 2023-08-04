@@ -31,46 +31,17 @@ pub struct MeshManager {
 
 #[derive(Resource)]
 pub struct MeshTasks {
-    pub tasks: Vec<Task<(ChunkKey, Mesh, Collider)>>,
+    pub tasks: Vec<Task<(Vec<Voxel>, ChunkKey)>>,
 }
 
-pub fn update_mesh_system(
-    mut commands: Commands,
+pub fn gen_mesh_system(
     mut chunk_map: ResMut<ChunkMap>,
     mut mesh_manager: ResMut<MeshManager>,
     clip_spheres: Res<ClipSpheres>,
     neighbour_offest: Res<NeighbourOffest>,
-    mut mesh_assets: ResMut<Assets<Mesh>>,
     mut mesh_task: ResMut<MeshTasks>,
-    materials: Res<MaterialStorge>,
-    material_config: Res<MaterailConfiguration>,
 ) {
     let pool = AsyncComputeTaskPool::get();
-    for ele in mesh_task.tasks.drain(..) {
-        match futures_lite::future::block_on(futures_lite::future::poll_once(ele)) {
-            Some((chunk_key, mesh, collider)) => {
-                mesh_manager.entities.insert(
-                    chunk_key,
-                    commands
-                        .spawn(MaterialMeshBundle {
-                            transform: Transform::from_xyz(
-                                (chunk_key.0.x * CHUNK_SIZE) as f32,
-                                -128.0,
-                                (chunk_key.0.z * CHUNK_SIZE) as f32,
-                            ),
-                            mesh: mesh_assets.add(mesh),
-                            material: materials.0.clone(),
-                            ..Default::default()
-                        })
-                        .insert(RigidBody::Fixed)
-                        .insert(collider)
-                        .id(),
-                );
-            }
-            None => {}
-        }
-    }
-
     for key in
         find_chunk_keys_array_by_shpere_y_0(clip_spheres.new_sphere, neighbour_offest.0.clone())
             .drain(..)
@@ -82,14 +53,53 @@ pub fn update_mesh_system(
             }
             // 无论如何都插入进去 放置下次重复检查
             mesh_manager.fast_key.insert(key);
-            let volexs = chunk_map.get_with_neighbor_full_y(key);
-            match gen_mesh(volexs.to_owned(), material_config.clone()) {
-                Some((render_mesh, collider)) => {
-                    let task = pool.spawn(async move { (key, render_mesh, collider) });
-                    mesh_task.tasks.push(task);
+            let volexs: Vec<Voxel> = chunk_map.get_with_neighbor_full_y(key);
+            let task = pool.spawn(async move { (volexs, key) });
+            mesh_task.tasks.push(task);
+        }
+    }
+}
+
+pub fn update_mesh_system(
+    mut commands: Commands,
+    mut mesh_manager: ResMut<MeshManager>,
+    mut mesh_assets: ResMut<Assets<Mesh>>,
+    mut mesh_task: ResMut<MeshTasks>,
+    materials: Res<MaterialStorge>,
+    material_config: Res<MaterailConfiguration>,
+) {
+    let l = mesh_task.tasks.len().min(3);
+    for ele in mesh_task.tasks.drain(..l) {
+        match futures_lite::future::block_on(futures_lite::future::poll_once(ele)) {
+            Some((voxels, chunk_key)) => {
+                if mesh_manager.entities.contains_key(&chunk_key) {
+                    return;
+                } else {
+                    match gen_mesh(voxels.to_owned(), material_config.clone()) {
+                        Some((render_mesh, collider)) => {
+                            mesh_manager.entities.insert(
+                                chunk_key,
+                                commands
+                                    .spawn(MaterialMeshBundle {
+                                        transform: Transform::from_xyz(
+                                            (chunk_key.0.x * CHUNK_SIZE) as f32,
+                                            -128.0,
+                                            (chunk_key.0.z * CHUNK_SIZE) as f32,
+                                        ),
+                                        mesh: mesh_assets.add(render_mesh),
+                                        material: materials.0.clone(),
+                                        ..Default::default()
+                                    })
+                                    .insert(RigidBody::Fixed)
+                                    .insert(collider)
+                                    .id(),
+                            );
+                        }
+                        None => {}
+                    }
                 }
-                None => {}
             }
+            None => {}
         }
     }
 }

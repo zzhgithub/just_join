@@ -90,21 +90,5 @@ pub fn gen_mesh(
     Some((render_mesh, collider))
 }
 
-pub fn padding_extents(voxels: Vec<Voxel>) -> Vec<Voxel> {
-    // 给数据加上Empty的边界
-    type SampleShape = ConstShape3u32<18, 18, 18>;
-    type DataShape = ConstShape3u32<16, 16, 16>;
-    let chunk_size_u32 = CHUNK_SIZE as u32;
-    let mut result = Vec::new();
-    for i in 0..SampleShape::SIZE {
-        let [x, y, z] = SampleShape::delinearize(i);
-        if x < 1 || y < 1 || z < 1 || x > chunk_size_u32 || y > chunk_size_u32 || z > chunk_size_u32
-        {
-            result.push(Voxel::EMPTY);
-        } else {
-            let index = DataShape::linearize([x - 1, y - 1, z - 1]);
-            result.push(voxels[index as usize]);
-        }
-    }
-    return result;
-}
+
+

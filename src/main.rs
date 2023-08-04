@@ -2,9 +2,9 @@ use bevy::{
     pbr::{wireframe::WireframePlugin, DirectionalLightShadowMap, Shadow},
     prelude::{
         bevy_main, AmbientLight, App, AssetServer, Assets, BuildChildren, Camera3d, Color,
-        Commands, Component, FixedUpdate, MaterialPlugin, Msaa, ParamSet, PointLight,
-        PointLightBundle, PostUpdate, PreUpdate, Query, Res, ResMut, Startup, SystemSet, Transform,
-        Update, Vec3, With, Without,
+        Commands, Component, FixedUpdate, IntoSystemConfigs, MaterialPlugin, Msaa, ParamSet,
+        PointLight, PointLightBundle, PostUpdate, PreUpdate, Query, Res, ResMut, Startup,
+        SystemSet, Transform, Update, Vec3, With, Without,
     },
     reflect::FromReflect,
     render::render_resource::RenderPipeline,
@@ -21,7 +21,9 @@ use clip_spheres::{update_clip_shpere_system, ClipSpheres, Sphere3};
 use controller::controller::{CameraTag, HeadTag};
 use inspector_egui::inspector_ui;
 use map_database::MapDataBase;
-use mesh_generator::{deleter_mesh_system, update_mesh_system, MeshManager, MeshTasks};
+use mesh_generator::{
+    deleter_mesh_system, gen_mesh_system, update_mesh_system, MeshManager, MeshTasks,
+};
 
 use bevy_egui::EguiPlugin;
 use mesh_material::{BindlessMaterial, MaterialStorge};
@@ -93,13 +95,13 @@ fn main() {
                 // .add_plugins(PlayerPlugin)
                 .add_plugins(PlayerControllerPlugin)
                 // .add_plugin(RapierDebugRenderPlugin::default())
-                .insert_resource(Msaa::Sample4)
+                // .insert_resource(Msaa::Sample4)
                 // 这里是设置了UI
                 .add_systems(Startup, setup)
-                .add_systems(PreUpdate, chunk_generate_system)
+                .add_systems(PreUpdate, (chunk_generate_system, gen_mesh_system))
                 .add_systems(PreUpdate, update_clip_shpere_system::<PlayerMe>)
                 .add_systems(PostUpdate, deleter_mesh_system)
-                .add_systems(FixedUpdate, update_mesh_system)
+                .add_systems(Update, update_mesh_system)
                 // 测试时使用的光源跟随
                 .add_systems(Update, light_follow_camera_system::<HeadTag>)
                 .run();

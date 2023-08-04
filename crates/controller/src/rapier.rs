@@ -7,7 +7,7 @@ use bevy::prelude::{
 use bevy_rapier3d::{
     prelude::{
         Collider, ColliderMassProperties, CollisionGroups, RapierColliderHandle,
-        RapierConfiguration, RapierContext, RapierRigidBodyHandle, RigidBody,
+        RapierConfiguration, RapierContext, RapierRigidBodyHandle, RigidBody, TimestepMode,
     },
     rapier::prelude::{
         ColliderFlags, InteractionGroups, RigidBodyMassProps, RigidBodySet, RigidBodyVelocity,
