@@ -6,7 +6,7 @@ use bevy::prelude::{IVec3, Resource};
 use ndshape::{ConstShape, ConstShape3u32};
 use sled::Db;
 
-use crate::{chunk::ChunkKey, map_generator::gen_chunk_data_by_seed, voxel::Voxel};
+use crate::{chunk::ChunkKey, map_generator::gen_chunk_data_by_seed, voxel::Voxel, CHUNK_SIZE_U32};
 
 #[derive(Resource)]
 pub struct MapDataBase {
@@ -21,7 +21,7 @@ impl MapDataBase {
 
     pub fn find_by_chunk_key(&self, chunk_key: ChunkKey) -> Vec<Voxel> {
         let mut voxels = Vec::new();
-        type SampleShape = ConstShape3u32<16, 16, 16>;
+        type SampleShape = ConstShape3u32<CHUNK_SIZE_U32, CHUNK_SIZE_U32, CHUNK_SIZE_U32>;
         for i in 0..SampleShape::SIZE {
             voxels.push(Voxel::EMPTY);
         }
@@ -37,28 +37,5 @@ impl MapDataBase {
                 voxels
             }
         };
-    }
-
-    // 测试生成地图的代码
-    pub fn test_gen(&mut self) {
-        type SampleShape = ConstShape3u32<16, 16, 16>;
-        let mut voxels = Vec::new();
-        for i in 0..SampleShape::SIZE {
-            // let [x, y, z] = SampleShape::delinearize(i);
-            // if ((x * x + y * y + z * z) as f32).sqrt() < 16.0 {
-            //     voxels.push(Voxel::FILLED);
-            // } else {
-            //     voxels.push(Voxel::EMPTY);
-            // };
-            voxels.push(Voxel::FILLED);
-        }
-
-        let serialized = bincode::serialize(&voxels).unwrap();
-        self.db
-            .insert(ChunkKey(IVec3::ZERO).as_u8_array(), serialized.clone());
-        self.db.insert(
-            ChunkKey(IVec3::new(0, 0, 1)).as_u8_array(),
-            serialized.clone(),
-        );
     }
 }

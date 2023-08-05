@@ -6,16 +6,17 @@ use simdnoise::NoiseBuilder;
 use crate::{
     chunk::ChunkKey,
     voxel::{Grass, Sand, Soli, Sown, Stone, Voxel, VoxelMaterial, Water},
+    CHUNK_SIZE, CHUNK_SIZE_U32,
 };
 
 pub fn gen_chunk_data_by_seed(seed: i32, chunk_key: ChunkKey) -> Vec<Voxel> {
     // 怎么计算出
     // 这里浅浅的 试一下这个算法
-    let base_x = (chunk_key.0.x * 16) as f32;
-    let base_y: f32 = (chunk_key.0.y * 16) as f32;
-    let base_z = (chunk_key.0.z * 16) as f32;
-    type SampleShape = ConstShape3u32<16, 16, 16>;
-    type PanleShap = ConstShape2u32<16, 16>;
+    let base_x = (chunk_key.0.x * CHUNK_SIZE) as f32;
+    let base_y: f32 = (chunk_key.0.y * CHUNK_SIZE) as f32;
+    let base_z = (chunk_key.0.z * CHUNK_SIZE) as f32;
+    type SampleShape = ConstShape3u32<CHUNK_SIZE_U32, CHUNK_SIZE_U32, CHUNK_SIZE_U32>;
+    type PanleShap = ConstShape2u32<CHUNK_SIZE_U32, CHUNK_SIZE_U32>;
     let mut voxels = Vec::new();
 
     let noise = noise2d(chunk_key, seed);
@@ -114,9 +115,9 @@ pub fn gen_chunk_data_by_seed(seed: i32, chunk_key: ChunkKey) -> Vec<Voxel> {
 }
 
 pub fn check_water(voxels: Vec<Voxel>, point: [u32; 3]) -> bool {
-    type SampleShape = ConstShape3u32<16, 16, 16>;
+    type SampleShape = ConstShape3u32<CHUNK_SIZE_U32, CHUNK_SIZE_U32, CHUNK_SIZE_U32>;
     let index = SampleShape::linearize(point);
-    if (point[0] >= 16 || point[1] >= 16 || point[2] >= 16) {
+    if (point[0] >= CHUNK_SIZE_U32 || point[1] >= CHUNK_SIZE_U32 || point[2] >= CHUNK_SIZE_U32) {
         return false;
     }
 
@@ -126,10 +127,10 @@ pub fn check_water(voxels: Vec<Voxel>, point: [u32; 3]) -> bool {
 // 生成2d的柏林噪声
 pub fn noise2d(chunk_key: ChunkKey, seed: i32) -> Vec<f32> {
     let (noise, _max, _min) = NoiseBuilder::fbm_2d_offset(
-        (chunk_key.0.x * 16) as f32,
-        16,
-        (chunk_key.0.z * 16) as f32,
-        16,
+        (chunk_key.0.x * CHUNK_SIZE) as f32,
+        CHUNK_SIZE as usize,
+        (chunk_key.0.z * CHUNK_SIZE) as f32,
+        CHUNK_SIZE as usize,
     )
     .with_seed(seed)
     .with_freq(0.05)
@@ -140,12 +141,12 @@ pub fn noise2d(chunk_key: ChunkKey, seed: i32) -> Vec<f32> {
 
 pub fn noise3d(chunk_key: ChunkKey, seed: i32) -> Vec<f32> {
     let (noise, _max, _min) = NoiseBuilder::fbm_3d_offset(
-        (chunk_key.0.x * 16) as f32,
-        16,
-        (chunk_key.0.y * 16) as f32,
-        16,
-        (chunk_key.0.z * 16) as f32,
-        16,
+        (chunk_key.0.x * CHUNK_SIZE) as f32,
+        CHUNK_SIZE as usize,
+        (chunk_key.0.y * CHUNK_SIZE) as f32,
+        CHUNK_SIZE as usize,
+        (chunk_key.0.z * CHUNK_SIZE) as f32,
+        CHUNK_SIZE as usize,
     )
     .with_seed(seed)
     .with_freq(0.1)
@@ -158,10 +159,10 @@ pub fn noise3d(chunk_key: ChunkKey, seed: i32) -> Vec<f32> {
 
 pub fn noise2d_ridge(chunk_key: ChunkKey, seed: i32) -> Vec<f32> {
     let (noise, min, max) = NoiseBuilder::ridge_2d_offset(
-        (chunk_key.0.x * 16) as f32,
-        16,
-        (chunk_key.0.z * 16) as f32,
-        16,
+        (chunk_key.0.x * CHUNK_SIZE) as f32,
+        CHUNK_SIZE as usize,
+        (chunk_key.0.z * CHUNK_SIZE) as f32,
+        CHUNK_SIZE as usize,
     )
     .with_seed(seed)
     .with_freq(0.03)
@@ -175,12 +176,12 @@ pub fn noise2d_ridge(chunk_key: ChunkKey, seed: i32) -> Vec<f32> {
 // todo: 尝试产生 洞穴的噪声
 pub fn noise3d_2(chunk_key: ChunkKey, seed: i32) -> Vec<f32> {
     let (noise, min, max) = NoiseBuilder::fbm_3d_offset(
-        (chunk_key.0.x * 16) as f32,
-        16,
-        (chunk_key.0.y * 16) as f32,
-        16,
-        (chunk_key.0.z * 16) as f32,
-        16,
+        (chunk_key.0.x * CHUNK_SIZE) as f32,
+        CHUNK_SIZE as usize,
+        (chunk_key.0.y * CHUNK_SIZE) as f32,
+        CHUNK_SIZE as usize,
+        (chunk_key.0.z * CHUNK_SIZE) as f32,
+        CHUNK_SIZE as usize,
     )
     .with_seed(seed)
     .with_freq(0.2)

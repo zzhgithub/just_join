@@ -13,14 +13,14 @@ use crate::{
     mesh_material::ATTRIBUTE_DATA,
     voxel::{Voxel, VoxelMaterial, Water},
     voxel_config::MaterailConfiguration,
-    CHUNK_SIZE,
+    CHUNK_SIZE, CHUNK_SIZE_ADD_2_U32,
 };
 
 pub fn gen_mesh(
     voxels: Vec<Voxel>,
     material_config: MaterailConfiguration,
 ) -> Option<(Mesh, Collider)> {
-    type SampleShape = ConstShape3u32<18, 256, 18>;
+    type SampleShape = ConstShape3u32<CHUNK_SIZE_ADD_2_U32, 256, CHUNK_SIZE_ADD_2_U32>;
     let mut buffer = GreedyQuadsBuffer::new(SampleShape::SIZE as usize);
     let faces: [block_mesh::OrientedBlockFace; 6] = RIGHT_HANDED_Y_UP_CONFIG.faces;
     // let padding_voxels = padding_extents(voxels);
@@ -95,7 +95,7 @@ pub fn gen_mesh(
 
 // 生成水的mesh
 pub fn gen_mesh_water(voxels: Vec<Voxel>, material_config: MaterailConfiguration) -> Option<Mesh> {
-    type SampleShape = ConstShape3u32<18, 256, 18>;
+    type SampleShape = ConstShape3u32<CHUNK_SIZE_ADD_2_U32, 256, CHUNK_SIZE_ADD_2_U32>;
     let mut buffer = GreedyQuadsBuffer::new(SampleShape::SIZE as usize);
     let faces: [block_mesh::OrientedBlockFace; 6] = RIGHT_HANDED_Y_UP_CONFIG.faces;
     // let water_voxels = pick_water(voxels);

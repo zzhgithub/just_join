@@ -6,7 +6,7 @@ use crate::{
     clip_spheres::ClipSpheres,
     map_database::MapDataBase,
     voxel::Voxel,
-    SmallKeyHashMap,
+    SmallKeyHashMap, CHUNK_SIZE, CHUNK_SIZE_ADD_2_U32, CHUNK_SIZE_U32,
 };
 
 #[derive(Debug, Clone, Default, Resource)]
@@ -37,10 +37,13 @@ impl ChunkMap {
 
     pub fn get_with_neighbor_full_y(&mut self, chunk_key: ChunkKey) -> Vec<Voxel> {
         let mut result = Vec::new();
-        type SampleShape = ConstShape3u32<18, 256, 18>;
-        type DataShape = ConstShape3u32<18, 16, 18>;
+        type SampleShape = ConstShape3u32<CHUNK_SIZE_ADD_2_U32, 256, CHUNK_SIZE_ADD_2_U32>;
+        type DataShape = ConstShape3u32<CHUNK_SIZE_ADD_2_U32, CHUNK_SIZE_U32, CHUNK_SIZE_ADD_2_U32>;
         let mut map: SmallKeyHashMap<i32, Vec<Voxel>> = SmallKeyHashMap::new();
-        for y_offset in -7..=8 {
+
+        let last_inex = -128 / CHUNK_SIZE + 1;
+
+        for y_offset in last_inex..=128 / CHUNK_SIZE {
             let mut new_key = chunk_key.clone();
             new_key.0.y = y_offset;
             let layer_data = self.get_layer_neighbors(new_key);
@@ -49,10 +52,10 @@ impl ChunkMap {
 
         for i in 0..SampleShape::SIZE {
             let [x, y, z] = SampleShape::delinearize(i);
-            let layer = y / 16;
-            let layer_index: i32 = (layer as i32) - 7;
+            let layer = y / CHUNK_SIZE_U32;
+            let layer_index: i32 = (layer as i32) + last_inex;
             let data = map.get(&(layer_index as i32));
-            let index = DataShape::linearize([x, y % 16, z]);
+            let index = DataShape::linearize([x, y % CHUNK_SIZE_U32, z]);
             result.push(Self::get_by_index(data, index));
         }
 
@@ -62,8 +65,9 @@ impl ChunkMap {
     fn get_layer_neighbors(&mut self, chunk_key: ChunkKey) -> Vec<Voxel> {
         let voxels = self.get(chunk_key);
 
-        type SampleShape = ConstShape3u32<18, 16, 18>;
-        type DataShape = ConstShape3u32<16, 16, 16>;
+        type SampleShape =
+            ConstShape3u32<CHUNK_SIZE_ADD_2_U32, CHUNK_SIZE_U32, CHUNK_SIZE_ADD_2_U32>;
+        type DataShape = ConstShape3u32<CHUNK_SIZE_U32, CHUNK_SIZE_U32, CHUNK_SIZE_U32>;
 
         // let py = &IVec3::new(0, 1, 0);
         // let ny = &IVec3::new(0, -1, 0);
@@ -86,92 +90,26 @@ impl ChunkMap {
         let mut result = Vec::new();
         for i in 0..SampleShape::SIZE {
             let [x, y, z] = SampleShape::delinearize(i);
-            if z != 0 && z != 17 && x == 17 {
+            if z != 0 && z != CHUNK_SIZE_U32 + 1 && x == CHUNK_SIZE_U32 + 1 {
                 // y轴
                 let index = DataShape::linearize([0, y, z - 1]);
                 let v: Option<&Vec<Voxel>> = map.get(px);
                 result.push(Self::get_by_index(v, index));
-            } else if z != 0 && z != 17 && x == 0 {
-                let index = DataShape::linearize([16 - 1, y, z - 1]);
+            } else if z != 0 && z != CHUNK_SIZE_U32 + 1 && x == 0 {
+                let index = DataShape::linearize([CHUNK_SIZE_U32 - 1, y, z - 1]);
                 let v = map.get(nx);
                 result.push(Self::get_by_index(v, index));
-            } else if x != 0 && x != 17 && z == 17 {
+            } else if x != 0 && x != CHUNK_SIZE_U32 + 1 && z == CHUNK_SIZE_U32 + 1 {
                 // z轴
                 let index = DataShape::linearize([x - 1, y, 0]);
                 let v = map.get(pz);
                 result.push(Self::get_by_index(v, index));
-            } else if x != 0 && x != 17 && z == 0 {
-                let index = DataShape::linearize([x - 1, y, 16 - 1]);
+            } else if x != 0 && x != CHUNK_SIZE_U32 + 1 && z == 0 {
+                let index = DataShape::linearize([x - 1, y, CHUNK_SIZE_U32 - 1]);
                 let v = map.get(nz);
                 result.push(Self::get_by_index(v, index));
-            } else if x > 0 && x < 17 && z > 0 && z < 17 {
+            } else if x > 0 && x < CHUNK_SIZE_U32 + 1 && z > 0 && z < CHUNK_SIZE_U32 + 1 {
                 let index = DataShape::linearize([x - 1, y, z - 1]);
-                result.push(Self::get_by_index(voxels, index));
-            } else {
-                result.push(Voxel::EMPTY);
-            }
-        }
-
-        result
-    }
-
-    pub fn get_with_neighbor(&mut self, chunk_key: ChunkKey) -> Vec<Voxel> {
-        // 有种可能 这里的数据还没有加载好 就先去获取了
-        let voxels = self.get(chunk_key);
-        // 这个是最核心的 数据
-        type SampleShape = ConstShape3u32<18, 18, 18>;
-        type DataShape = ConstShape3u32<16, 16, 16>;
-
-        let py = &IVec3::new(0, 1, 0);
-        let ny = &IVec3::new(0, -1, 0);
-        let px = &IVec3::new(1, 0, 0);
-        let nx = &IVec3::new(-1, 0, 0);
-        let pz = &IVec3::new(0, 0, 1);
-        let nz = &IVec3::new(0, 0, -1);
-
-        let offsets = vec![py, ny, px, nx, pz, nz];
-        let mut map: SmallKeyHashMap<IVec3, Vec<Voxel>> = SmallKeyHashMap::new();
-        for ele in offsets {
-            let new_key = ChunkKey(chunk_key.0 + ele.clone());
-            let _ = match self.get(new_key) {
-                Some(v) => {
-                    map.insert(ele.clone(), v.clone());
-                }
-                None => (),
-            };
-        }
-        let mut result = Vec::new();
-        for i in 0..SampleShape::SIZE {
-            let [x, y, z] = SampleShape::delinearize(i);
-            if x != 0 && x != 17 && z != 0 && z != 17 && y == 17 {
-                // y轴
-                let index = DataShape::linearize([x - 1, 0, z - 1]);
-                let v = map.get(py);
-                result.push(Self::get_by_index(v, index));
-            } else if x != 0 && x != 17 && z != 0 && z != 17 && y == 0 {
-                let index = DataShape::linearize([x - 1, 16 - 1, z - 1]);
-                let v: Option<&Vec<Voxel>> = map.get(ny);
-                result.push(Self::get_by_index(v, index));
-            } else if y != 0 && y != 17 && z != 0 && z != 17 && x == 17 {
-                // y轴
-                let index = DataShape::linearize([0, y - 1, z - 1]);
-                let v: Option<&Vec<Voxel>> = map.get(px);
-                result.push(Self::get_by_index(v, index));
-            } else if y != 0 && y != 17 && z != 0 && z != 17 && x == 0 {
-                let index = DataShape::linearize([16 - 1, y - 1, z - 1]);
-                let v = map.get(nx);
-                result.push(Self::get_by_index(v, index));
-            } else if x != 0 && x != 17 && y != 0 && y != 17 && z == 17 {
-                // z轴
-                let index = DataShape::linearize([x - 1, y - 1, 0]);
-                let v = map.get(pz);
-                result.push(Self::get_by_index(v, index));
-            } else if x != 0 && x != 17 && y != 0 && y != 17 && z == 0 {
-                let index = DataShape::linearize([x - 1, y - 1, 16 - 1]);
-                let v = map.get(nz);
-                result.push(Self::get_by_index(v, index));
-            } else if x > 0 && x < 17 && y > 0 && y < 17 && z > 0 && z < 17 {
-                let index = DataShape::linearize([x - 1, y - 1, z - 1]);
                 result.push(Self::get_by_index(voxels, index));
             } else {
                 result.push(Voxel::EMPTY);
