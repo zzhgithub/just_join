@@ -66,3 +66,4 @@ voxel_material!(Soli, 土壤, 2);
 voxel_material!(Grass, 草方块, 3);
 voxel_material!(Sown, 雪方块, 4);
 voxel_material!(Water, 水, 5);
+voxel_material!(Sand, 沙子, 6);

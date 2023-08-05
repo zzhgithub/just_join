@@ -1,5 +1,6 @@
 (
     voxels:{
+        6:(type_name:"Sand",type_ch_name:"沙子",default:(index:7,path:"textures/沙子.png"),normal:{}),
         5:(type_name:"Water",type_ch_name:"水",default:(index:6,path:"textures/水.png"),normal:{}),
         4:(type_name:"Sown",type_ch_name:"雪方块",default:(index:5,path:"textures/雪.png"),normal:{}),
         3:(type_name:"Grass",type_ch_name:"草方块",default:(index:4,path:"textures/grass_a.png"),normal:{
@@ -16,4 +17,5 @@
             "textures/grass_a.png",
             "textures/雪.png",
             "textures/水.png",
+            "textures/沙子.png",
             ])

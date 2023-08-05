@@ -57,7 +57,7 @@ pub type SmallKeyHashMap<K, V> = ahash::AHashMap<K, V>;
 pub const VIEW_RADIUS: f32 = 300.00;
 pub const CHUNK_SIZE: i32 = 16;
 // 贴图个数
-pub const MAX_TEXTURE_COUNT: usize = 7;
+pub const MAX_TEXTURE_COUNT: usize = 8;
 
 #[derive(Debug, StructOpt)]
 enum RunMode {

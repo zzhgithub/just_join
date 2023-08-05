@@ -5,7 +5,7 @@ use simdnoise::NoiseBuilder;
 
 use crate::{
     chunk::ChunkKey,
-    voxel::{Grass, Soli, Sown, Stone, Voxel, VoxelMaterial, Water},
+    voxel::{Grass, Sand, Soli, Sown, Stone, Voxel, VoxelMaterial, Water},
 };
 
 pub fn gen_chunk_data_by_seed(seed: i32, chunk_key: ChunkKey) -> Vec<Voxel> {
@@ -71,13 +71,34 @@ pub fn gen_chunk_data_by_seed(seed: i32, chunk_key: ChunkKey) -> Vec<Voxel> {
         }
     }
     // 海平面 todo 更加优秀的还平面
+    let mut water_flag = false;
     for i in 0..SampleShape::SIZE {
         let [x, y, z] = SampleShape::delinearize(i);
-        let p_y = base_y + y as f32;
+        let p_y: f32 = base_y + y as f32;
         if p_y <= -60. + 76. && voxels[i as usize].id == Voxel::EMPTY.id {
+            water_flag = true;
             voxels[i as usize] = Water::into_voxel();
         }
     }
+
+    //生成 沙子
+    if (water_flag) {
+        for i in 0..SampleShape::SIZE {
+            let [x, y, z] = SampleShape::delinearize(i);
+            if (check_water(voxels.clone(), [x + 1, y, z])
+                || (x != 0 && check_water(voxels.clone(), [x - 1, y, z]))
+                || check_water(voxels.clone(), [x, y + 1, z])
+                || (y != 0 && check_water(voxels.clone(), [x, y - 1, z]))
+                || check_water(voxels.clone(), [x, y, z + 1])
+                || (z != 0 && check_water(voxels.clone(), [x, y, z - 1])))
+                && voxels[i as usize].id != Water::ID
+                && voxels[i as usize].id != Voxel::EMPTY.id
+            {
+                voxels[i as usize] = Sand::into_voxel()
+            }
+        }
+    }
+
     //  侵蚀 洞穴
     let noise_3d = noise3d_2(chunk_key, seed);
     for i in 0..SampleShape::SIZE {
@@ -90,6 +111,16 @@ pub fn gen_chunk_data_by_seed(seed: i32, chunk_key: ChunkKey) -> Vec<Voxel> {
     }
 
     voxels
+}
+
+pub fn check_water(voxels: Vec<Voxel>, point: [u32; 3]) -> bool {
+    type SampleShape = ConstShape3u32<16, 16, 16>;
+    let index = SampleShape::linearize(point);
+    if (point[0] >= 16 || point[1] >= 16 || point[2] >= 16) {
+        return false;
+    }
+
+    return voxels[index as usize].id == Water::ID;
 }
 
 // 生成2d的柏林噪声
