@@ -55,7 +55,7 @@ pub fn gen_chunk_data_by_seed(seed: i32, chunk_key: ChunkKey) -> Vec<Voxel> {
                 continue;
             }
             if p_y >= top - 1.0 {
-                if (p_y < -60. + 70.) {
+                if (p_y < -60. + 76.) {
                     voxels.push(Soli::into_voxel());
                 } else {
                     voxels.push(Grass::into_voxel());
@@ -73,8 +73,8 @@ pub fn gen_chunk_data_by_seed(seed: i32, chunk_key: ChunkKey) -> Vec<Voxel> {
     // 海平面 todo 更加优秀的还平面
     for i in 0..SampleShape::SIZE {
         let [x, y, z] = SampleShape::delinearize(i);
-        let base_y: f32 = (chunk_key.0.y * 16) as f32;
-        if base_y < -60. + 70. && voxels[i as usize].id == Voxel::EMPTY.id {
+        let p_y = base_y + y as f32;
+        if p_y <= -60. + 76. && voxels[i as usize].id == Voxel::EMPTY.id {
             voxels[i as usize] = Water::into_voxel();
         }
     }

@@ -2,8 +2,8 @@ use std::collections::HashSet;
 
 use bevy::{
     prelude::{
-        Assets, Color, Commands, Entity, MaterialMeshBundle, Mesh, PbrBundle, Res, ResMut,
-        Resource, StandardMaterial, Transform,
+        AlphaMode, Assets, Color, Commands, Entity, MaterialMeshBundle, Mesh, PbrBundle, Res,
+        ResMut, Resource, StandardMaterial, Transform,
     },
     tasks::{AsyncComputeTaskPool, Task},
 };
@@ -68,6 +68,7 @@ pub fn update_mesh_system(
     mut mesh_task: ResMut<MeshTasks>,
     materials: Res<MaterialStorge>,
     material_config: Res<MaterailConfiguration>,
+    mut materials_assets: ResMut<Assets<StandardMaterial>>,
 ) {
     let l = mesh_task.tasks.len().min(3);
     for ele in mesh_task.tasks.drain(..l) {
@@ -110,7 +111,16 @@ pub fn update_mesh_system(
                                             (chunk_key.0.z * CHUNK_SIZE) as f32,
                                         ),
                                         mesh: mesh_assets.add(water_mesh),
-                                        material: materials.0.clone(),
+                                        material: materials_assets.add(StandardMaterial {
+                                            base_color: Color::rgba(
+                                                10. / 255.,
+                                                18. / 255.,
+                                                246. / 255.,
+                                                0.6,
+                                            ),
+                                            alpha_mode: AlphaMode::Blend,
+                                            ..Default::default()
+                                        }),
                                         ..Default::default()
                                     })
                                     .id(),
