@@ -1,13 +1,10 @@
 use bevy::{
     pbr::{wireframe::WireframePlugin, DirectionalLightShadowMap, Shadow},
     prelude::{
-        bevy_main, AmbientLight, App, AssetServer, Assets, BuildChildren, Camera3d, Color,
-        Commands, Component, FixedUpdate, IntoSystemConfigs, Last, MaterialPlugin, Msaa, ParamSet,
-        PointLight, PointLightBundle, PostUpdate, PreUpdate, Query, Res, ResMut, Startup,
-        SystemSet, Transform, Update, Vec3, With, Without,
+        bevy_main, AmbientLight, App, AssetServer, Assets, Commands, Component, IntoSystemConfigs,
+        Last, MaterialPlugin, Msaa, PointLight, PointLightBundle, PreUpdate, Query, Res, ResMut,
+        Startup, SystemSet, Transform, Update, Vec3, With, Without,
     },
-    reflect::FromReflect,
-    render::render_resource::RenderPipeline,
     DefaultPlugins,
 };
 // use bevy_atmosphere::prelude::AtmospherePlugin;
@@ -18,16 +15,16 @@ use bevy_rapier3d::{
 use chunk::generate_offset_resoure;
 use chunk_generator::{chunk_generate_system, ChunkMap};
 use clip_spheres::{update_clip_shpere_system, ClipSpheres, Sphere3};
+use collider_generator::TerrainPhysicsPlugin;
 use controller::controller::{CameraTag, HeadTag};
 use inspector_egui::inspector_ui;
 use map_database::MapDataBase;
 use mesh_generator::{
-    deleter_mesh_system, gen_mesh_system, update_mesh_system, MeshManager, MeshTasks,
+    deleter_mesh_system, gen_mesh_system, update_mesh_system, MeshManager, MeshSystem, MeshTasks,
 };
 
 use bevy_egui::EguiPlugin;
 use mesh_material::{BindlessMaterial, MaterialStorge};
-use palyer::{PlayerController, PlayerPlugin};
 use player_controller::{PlayerControllerPlugin, PlayerMe};
 use ray_cast::MyRayCastPlugin;
 use sky::SkyPlugin;
@@ -38,6 +35,7 @@ use voxel_config::{MaterailConfiguration, VoxelMaterialToolPulgin};
 mod chunk;
 mod chunk_generator;
 mod clip_spheres;
+mod collider_generator;
 mod inspector_egui;
 mod map_database;
 mod map_generator;
@@ -54,7 +52,7 @@ mod voxel_config;
 pub type SmallKeyHashMap<K, V> = ahash::AHashMap<K, V>;
 
 // const zone
-pub const VIEW_RADIUS: f32 = 256.00;
+pub const VIEW_RADIUS: f32 = 128.00;
 pub const CHUNK_SIZE: i32 = 16;
 pub const CHUNK_SIZE_U32: u32 = CHUNK_SIZE as u32;
 pub const CHUNK_SIZE_ADD_2_U32: u32 = CHUNK_SIZE_U32 + 2;
@@ -92,17 +90,17 @@ fn main() {
                 .add_plugins(SkyPlugin)
                 .add_plugins(EguiPlugin)
                 .add_plugins(bevy_inspector_egui::DefaultInspectorConfigPlugin) // adds default options and `InspectorEguiImpl`s
-                .add_system(inspector_ui)
+                // .add_system(inspector_ui)
                 .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
-                // .add_plugins(PlayerPlugin)
                 .add_plugins(PlayerControllerPlugin)
-                // .add_plugin(RapierDebugRenderPlugin::default())
+                .add_plugins(TerrainPhysicsPlugin)
+                // .add_plugins(RapierDebugRenderPlugin::default())
                 // .insert_resource(Msaa::Sample4)
                 // 这里是设置了UI
                 .add_systems(Startup, setup)
                 .add_systems(PreUpdate, (chunk_generate_system, gen_mesh_system))
                 .add_systems(PreUpdate, update_clip_shpere_system::<PlayerMe>)
-                .add_systems(Update, update_mesh_system)
+                .add_systems(Update, update_mesh_system.in_set(MeshSystem::UPDATE_MESH))
                 // 测试时使用的光源跟随
                 .add_systems(Update, light_follow_camera_system::<HeadTag>)
                 .add_systems(Last, deleter_mesh_system)
@@ -133,7 +131,7 @@ fn setup(
     commands.insert_resource(clip_spheres);
     // 设置一个环境光照强度
     commands.insert_resource(AmbientLight {
-        brightness: 1.06,
+        brightness: 0.06,
         ..Default::default()
     });
     // 加载贴图的配置项
@@ -167,12 +165,6 @@ fn setup(
         materials,
         config.files.clone(),
     ));
-
-    // 添加氛围光
-    // commands.insert_resource(AmbientLight {
-    //     color: Color::WHITE,
-    //     brightness: 0.0,
-    // });
 
     // commands.insert_resource(DirectionalLightShadowMap { size: 4096 });
     // FIXME: 设置光源 有天空盒子不需要设置光源测试了

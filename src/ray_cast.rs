@@ -9,8 +9,9 @@ use bevy::{
 };
 use bevy_egui::egui::color_picker::Alpha;
 use bevy_rapier3d::prelude::{QueryFilter, RapierContext};
+use controller::controller::CameraTag;
 
-use crate::palyer::{PlayerController, PlayerStorge};
+use crate::{palyer::{PlayerController, PlayerStorge}, player_controller::PlayerMe};
 
 fn get_pos_chunk_center(vec3: Vec3, normal: Vec3) -> Vec3 {
     // 应该是命中点所在的面的中点
@@ -23,13 +24,13 @@ fn get_pos_chunk_center(vec3: Vec3, normal: Vec3) -> Vec3 {
 }
 
 pub fn touth_mesh_ray_cast(
-    query: Query<&Transform, With<PlayerController>>,
+    query: Query<&Transform, With<CameraTag>>,
     rapier_context: Res<RapierContext>,
     player_storge: Res<PlayerStorge>,
     mut choose_cube: ResMut<ChooseCube>,
     mut query_help_cube: Query<
         (&mut Transform, &mut Visibility),
-        (With<HelpCube>, Without<PlayerController>),
+        (With<HelpCube>, Without<CameraTag>),
     >,
     // mut query_visibility: Query<&mut Visibility, With<HelpCube>>,
 ) {

@@ -19,7 +19,7 @@ use crate::{
 pub fn gen_mesh(
     voxels: Vec<Voxel>,
     material_config: MaterailConfiguration,
-) -> Option<(Mesh, Collider)> {
+) -> Option<Mesh> {
     type SampleShape = ConstShape3u32<CHUNK_SIZE_ADD_2_U32, 256, CHUNK_SIZE_ADD_2_U32>;
     let mut buffer = GreedyQuadsBuffer::new(SampleShape::SIZE as usize);
     let faces: [block_mesh::OrientedBlockFace; 6] = RIGHT_HANDED_Y_UP_CONFIG.faces;
@@ -85,12 +85,10 @@ pub fn gen_mesh(
     render_mesh.insert_attribute(ATTRIBUTE_DATA, VertexAttributeValues::Uint32(data));
     render_mesh.set_indices(Some(Indices::U32(indices.clone())));
 
-    let collider_vertices: Vec<Vec3> = positions.iter().cloned().map(|p| Vec3::from(p)).collect();
-    let collider_indices: Vec<[u32; 3]> = indices.chunks(3).map(|i| [i[0], i[1], i[2]]).collect();
-    // let collider = ColliderShape::trimesh(collider_vertices, collider_indices);
-    let collider = Collider::trimesh(collider_vertices, collider_indices);
-    // Collider::trimesh(vertices, indices);
-    Some((render_mesh, collider))
+    // let collider_vertices: Vec<Vec3> = positions.iter().cloned().map(|p| Vec3::from(p)).collect();
+    // let collider_indices: Vec<[u32; 3]> = indices.chunks(3).map(|i| [i[0], i[1], i[2]]).collect();
+    // let collider = Collider::trimesh(collider_vertices, collider_indices);
+    Some(render_mesh)
 }
 
 // 生成水的mesh

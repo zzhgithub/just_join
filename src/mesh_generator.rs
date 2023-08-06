@@ -2,8 +2,8 @@ use std::collections::HashSet;
 
 use bevy::{
     prelude::{
-        AlphaMode, Assets, Color, Commands, Entity, MaterialMeshBundle, Mesh, PbrBundle, Res,
-        ResMut, Resource, StandardMaterial, Transform,
+        AlphaMode, Assets, Color, Commands, Entity, Handle, MaterialMeshBundle, Mesh, PbrBundle,
+        Res, ResMut, Resource, StandardMaterial, SystemSet, Transform,
     },
     tasks::{AsyncComputeTaskPool, Task},
 };
@@ -11,6 +11,7 @@ use bevy_rapier3d::{
     prelude::{Collider, RigidBody},
     rapier::prelude::{RigidBodyType, SharedShape},
 };
+use bincode::de;
 
 use crate::{
     chunk::{find_chunk_keys_array_by_shpere_y_0, ChunkKey, NeighbourOffest},
@@ -25,6 +26,7 @@ use crate::{
 
 #[derive(Debug, Clone, Resource, Default)]
 pub struct MeshManager {
+    pub mesh_storge: SmallKeyHashMap<ChunkKey, Handle<Mesh>>,
     pub entities: SmallKeyHashMap<ChunkKey, Entity>,
     pub water_entities: SmallKeyHashMap<ChunkKey, Entity>,
     pub fast_key: HashSet<ChunkKey>,
@@ -33,6 +35,11 @@ pub struct MeshManager {
 #[derive(Resource)]
 pub struct MeshTasks {
     pub tasks: Vec<Task<(Vec<Voxel>, ChunkKey)>>,
+}
+
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+pub enum MeshSystem {
+    UPDATE_MESH,
 }
 
 pub fn gen_mesh_system(
@@ -78,7 +85,11 @@ pub fn update_mesh_system(
                     return;
                 } else {
                     match gen_mesh(voxels.to_owned(), material_config.clone()) {
-                        Some((render_mesh, collider)) => {
+                        Some(render_mesh) => {
+                            let mesh_handle = mesh_assets.add(render_mesh);
+                            mesh_manager
+                                .mesh_storge
+                                .insert(chunk_key, mesh_handle.clone());
                             mesh_manager.entities.insert(
                                 chunk_key,
                                 commands
@@ -88,12 +99,10 @@ pub fn update_mesh_system(
                                             -128.0,
                                             (chunk_key.0.z * CHUNK_SIZE) as f32,
                                         ),
-                                        mesh: mesh_assets.add(render_mesh),
+                                        mesh: mesh_handle.clone(),
                                         material: materials.0.clone(),
                                         ..Default::default()
                                     })
-                                    .insert(RigidBody::Fixed)
-                                    .insert(collider)
                                     .id(),
                             );
                         }
