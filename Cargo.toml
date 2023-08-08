@@ -25,7 +25,8 @@ controller = { path = "crates/controller", version = "0.1.0" }
 walkdir = "2.3.3"
 structopt = "0.3"
 ron = "0.8.0"
-
+bevy_console = "0.8.0"
+clap = { version = "=4.1.10", features = ["derive"]}
 
 [profile.dev.package.bevy_rapier3d]
 opt-level = 3

@@ -17,6 +17,7 @@ use chunk_command::ChunkCommandsPlugin;
 use chunk_generator::{chunk_generate_system, ChunkMap};
 use clip_spheres::{update_clip_shpere_system, ClipSpheres, Sphere3};
 use collider_generator::TerrainPhysicsPlugin;
+use console_command::ConsoleCommandPlugins;
 use controller::controller::{CameraTag, HeadTag};
 use inspector_egui::inspector_ui;
 use map_database::MapDataBase;
@@ -38,6 +39,7 @@ mod chunk_command;
 mod chunk_generator;
 mod clip_spheres;
 mod collider_generator;
+mod console_command;
 mod inspector_egui;
 mod map_database;
 mod map_generator;
@@ -76,21 +78,22 @@ fn main() {
             app_builder
                 .add_plugins(DefaultPlugins)
                 .add_plugins(MaterialPlugin::<BindlessMaterial>::default())
-                .add_plugins(EguiPlugin)
+                // .add_plugins(EguiPlugin)
                 .add_plugins(bevy_inspector_egui::DefaultInspectorConfigPlugin)
                 .add_plugins(VoxelMaterialToolPulgin)
+                .add_plugins(ConsoleCommandPlugins)
                 .run();
         }
         RunMode::Game => {
             app_builder
                 .add_plugins(DefaultPlugins)
+                .add_plugins(ConsoleCommandPlugins)
                 .add_plugins(MaterialPlugin::<BindlessMaterial>::default())
                 // .add_plugins(PlayerPlugin)
                 //FIXME: 这个物品获取又基本无效了 物理引擎不能识别到碰撞了
                 .add_plugins(MyRayCastPlugin)
-                // 0.11.0 不能使用了
                 .add_plugins(SkyPlugin)
-                .add_plugins(EguiPlugin)
+                // .add_plugins(EguiPlugin)
                 .add_plugins(bevy_inspector_egui::DefaultInspectorConfigPlugin) // adds default options and `InspectorEguiImpl`s
                 // .add_system(inspector_ui)
                 .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
@@ -134,7 +137,7 @@ fn setup(
     commands.insert_resource(clip_spheres);
     // 设置一个环境光照强度
     commands.insert_resource(AmbientLight {
-        brightness: 0.06,
+        brightness: 1.06,
         ..Default::default()
     });
     // 加载贴图的配置项

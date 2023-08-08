@@ -51,7 +51,7 @@ pub fn touth_mesh_ray_cast(
     let ray_dir = tfr.forward();
     // println!("ray_pos: {:?}", ray_pos);
     // println!("ray_dir {:?}", ray_dir);
-    let max_toi = 3.0;
+    let max_toi = 5.0;
     let solid = true;
     // 这个参数是做什么的？
     let filter: QueryFilter<'_> = QueryFilter::exclude_dynamic()

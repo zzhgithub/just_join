@@ -149,9 +149,11 @@ pub fn build_or_break(
 pub fn vec3_to_chunk_key_any_xyz(pos: Vec3) -> (ChunkKey, [u32; 3]) {
     println!("此时的位置是: {:?}", pos);
     let chunk_key = ChunkKey(get_chunk_key_i3_by_vec3(pos));
-    let x = (pos.x - (chunk_key.0.x * CHUNK_SIZE) as f32 + CHUNK_SIZE as f32 / 2. - 0.5) as u32;
+    let x =
+        (pos.x - (chunk_key.0.x * CHUNK_SIZE) as f32 + CHUNK_SIZE as f32 / 2. - 0.5 - 1.) as u32;
     let y = (pos.y - (chunk_key.0.y * CHUNK_SIZE) as f32 + CHUNK_SIZE as f32 / 2. - 0.5) as u32;
-    let z = (pos.z - (chunk_key.0.z * CHUNK_SIZE) as f32 + CHUNK_SIZE as f32 / 2. - 0.5) as u32;
+    let z =
+        (pos.z - (chunk_key.0.z * CHUNK_SIZE) as f32 + CHUNK_SIZE as f32 / 2. - 0.5 - 1.) as u32;
 
     return (chunk_key, [x, y, z]);
 }
