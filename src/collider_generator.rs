@@ -95,9 +95,9 @@ pub fn spawn_collider(
                     .spawn((
                         TerrainPhysics,
                         Transform::from_xyz(
-                            (chunk_key.0.x * CHUNK_SIZE) as f32,
-                            -128.0,
-                            (chunk_key.0.z * CHUNK_SIZE) as f32,
+                            (chunk_key.0.x * CHUNK_SIZE) as f32 - CHUNK_SIZE as f32 / 2.0- 1.,
+                            -128.0 + CHUNK_SIZE as f32 / 2.0 ,
+                            (chunk_key.0.z * CHUNK_SIZE) as f32 - CHUNK_SIZE as f32 / 2.0- 1.,
                         ),
                         GlobalTransform::default(),
                     ))

@@ -1,16 +1,16 @@
 use bevy::{
     prelude::{
         shape, App, Assets, BuildChildren, Camera3dBundle, ClearColor, Color, Commands, Component,
-        ComputedVisibility, Entity, GlobalTransform, Input, KeyCode, Mat4, Mesh, PbrBundle, Plugin,
-        PreUpdate, Quat, Query, Res, ResMut, StandardMaterial, Startup, Transform, Update, Vec3,
-        Visibility,
+        ComputedVisibility, Entity, FogFalloff, FogSettings, GlobalTransform, Input, KeyCode, Mat4,
+        Mesh, PbrBundle, Plugin, PreUpdate, Quat, Query, Res, ResMut, StandardMaterial, Startup,
+        Transform, Update, Vec3, Visibility,
     },
     transform::TransformBundle,
 };
 use bevy_atmosphere::prelude::AtmosphereCamera;
 use bevy_rapier3d::prelude::{
-    Ccd, Collider, ColliderMassProperties, LockedAxes, NoUserData, RapierPhysicsPlugin, RigidBody,
-    Sleeping,
+    Ccd, CoefficientCombineRule, Collider, ColliderMassProperties, Damping, Friction, LockedAxes,
+    NoUserData, RapierPhysicsPlugin, Restitution, RigidBody, Sleeping,
 };
 use controller::{
     controller::{

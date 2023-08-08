@@ -95,9 +95,13 @@ pub fn update_mesh_system(
                                 commands
                                     .spawn(MaterialMeshBundle {
                                         transform: Transform::from_xyz(
-                                            (chunk_key.0.x * CHUNK_SIZE) as f32,
-                                            -128.0,
-                                            (chunk_key.0.z * CHUNK_SIZE) as f32,
+                                            (chunk_key.0.x * CHUNK_SIZE) as f32
+                                                - CHUNK_SIZE as f32 / 2.0
+                                                - 1.,
+                                            -128.0 + CHUNK_SIZE as f32 / 2.0,
+                                            (chunk_key.0.z * CHUNK_SIZE) as f32
+                                                - CHUNK_SIZE as f32 / 2.0
+                                                - 1.,
                                         ),
                                         mesh: mesh_handle.clone(),
                                         material: materials.0.clone(),
@@ -115,9 +119,13 @@ pub fn update_mesh_system(
                                 commands
                                     .spawn(MaterialMeshBundle {
                                         transform: Transform::from_xyz(
-                                            (chunk_key.0.x * CHUNK_SIZE) as f32,
-                                            -128.0,
-                                            (chunk_key.0.z * CHUNK_SIZE) as f32,
+                                            (chunk_key.0.x * CHUNK_SIZE) as f32
+                                                - CHUNK_SIZE as f32 / 2.0
+                                                - 1.,
+                                            -128.0 + CHUNK_SIZE as f32 / 2.0,
+                                            (chunk_key.0.z * CHUNK_SIZE) as f32
+                                                - CHUNK_SIZE as f32 / 2.0
+                                                - 1.,
                                         ),
                                         mesh: mesh_assets.add(water_mesh),
                                         material: materials_assets.add(StandardMaterial {

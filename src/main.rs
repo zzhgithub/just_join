@@ -13,6 +13,7 @@ use bevy_rapier3d::{
     render::RapierDebugRenderPlugin,
 };
 use chunk::generate_offset_resoure;
+use chunk_command::ChunkCommandsPlugin;
 use chunk_generator::{chunk_generate_system, ChunkMap};
 use clip_spheres::{update_clip_shpere_system, ClipSpheres, Sphere3};
 use collider_generator::TerrainPhysicsPlugin;
@@ -33,6 +34,7 @@ use voxel_config::{MaterailConfiguration, VoxelMaterialToolPulgin};
 // use sky::SkyPlugin;
 
 mod chunk;
+mod chunk_command;
 mod chunk_generator;
 mod clip_spheres;
 mod collider_generator;
@@ -52,7 +54,7 @@ mod voxel_config;
 pub type SmallKeyHashMap<K, V> = ahash::AHashMap<K, V>;
 
 // const zone
-pub const VIEW_RADIUS: f32 = 128.00;
+pub const VIEW_RADIUS: f32 = 32.00;
 pub const CHUNK_SIZE: i32 = 16;
 pub const CHUNK_SIZE_U32: u32 = CHUNK_SIZE as u32;
 pub const CHUNK_SIZE_ADD_2_U32: u32 = CHUNK_SIZE_U32 + 2;
@@ -85,7 +87,7 @@ fn main() {
                 .add_plugins(MaterialPlugin::<BindlessMaterial>::default())
                 // .add_plugins(PlayerPlugin)
                 //FIXME: 这个物品获取又基本无效了 物理引擎不能识别到碰撞了
-                // .add_plugins(MyRayCastPlugin)
+                .add_plugins(MyRayCastPlugin)
                 // 0.11.0 不能使用了
                 .add_plugins(SkyPlugin)
                 .add_plugins(EguiPlugin)
@@ -94,8 +96,9 @@ fn main() {
                 .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
                 .add_plugins(PlayerControllerPlugin)
                 .add_plugins(TerrainPhysicsPlugin)
+                .add_plugins(ChunkCommandsPlugin)
                 // .add_plugins(RapierDebugRenderPlugin::default())
-                // .insert_resource(Msaa::Sample4)
+                .insert_resource(Msaa::Sample4)
                 // 这里是设置了UI
                 .add_systems(Startup, setup)
                 .add_systems(PreUpdate, (chunk_generate_system, gen_mesh_system))

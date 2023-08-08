@@ -3,7 +3,7 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-use bevy::prelude::{IVec3, Resource};
+use bevy::prelude::{IVec3, Resource, Vec3};
 
 use crate::{clip_spheres::Sphere3, CHUNK_SIZE};
 
@@ -19,7 +19,6 @@ impl ChunkKey {
         return hash_bytes;
     }
 }
-
 
 // 生成 y 偏移两为0的移动
 pub fn generate_offset_array_with_y_0(chunk_distance: i32) -> Vec<IVec3> {
@@ -45,9 +44,8 @@ pub fn generate_offset_resoure(radius: f32) -> NeighbourOffest {
     NeighbourOffest(offsets)
 }
 
-
 pub fn find_chunk_keys_array_by_shpere_y_0(sphere: Sphere3, offsets: Vec<IVec3>) -> Vec<ChunkKey> {
-    let mut center_chunk_point = sphere.center.as_ivec3() / CHUNK_SIZE;
+    let mut center_chunk_point = get_chunk_key_i3_by_vec3(sphere.center);
     center_chunk_point.y = 0;
     offsets
         .iter()
@@ -61,7 +59,7 @@ pub fn find_chunk_keys_by_shpere_to_full_height(
     offsets: Vec<IVec3>,
     mut rt: impl FnMut(ChunkKey),
 ) {
-    let mut center_chunk_point = sphere.center.as_ivec3() / CHUNK_SIZE;
+    let mut center_chunk_point = get_chunk_key_i3_by_vec3(sphere.center);
     center_chunk_point.y = 0;
     for &ele in offsets.iter() {
         for y_offset in -7..=8 {
@@ -76,4 +74,24 @@ pub fn find_chunk_keys_by_shpere_to_full_height(
             ))
         }
     }
+}
+
+// 新版获取当前的 chunk_Key
+pub fn get_chunk_key_i3_by_vec3(point: Vec3) -> IVec3 {
+    IVec3 {
+        x: get_chunk_key_axis(point.x),
+        y: get_chunk_key_axis(point.y),
+        z: get_chunk_key_axis(point.z),
+    }
+}
+
+fn get_chunk_key_axis(x: f32) -> i32 {
+    let x_dot = if x > 0. { x.ceil() } else { x.floor() };
+    if x_dot > 8. {
+        return (x_dot - (CHUNK_SIZE as f32 / 2.0)) as i32 / CHUNK_SIZE + 1;
+    }
+    if x_dot < -8. {
+        return (x_dot + (CHUNK_SIZE as f32 / 2.0)) as i32 / CHUNK_SIZE - 1;
+    }
+    0
 }

@@ -1,9 +1,9 @@
 use bevy::{
     pbr::wireframe::Wireframe,
     prelude::{
-        shape::Cube, AlphaMode, Assets, Color, Commands, Component, Mesh, PbrBundle, Plugin, Query,
-        Res, ResMut, Resource, StandardMaterial, Startup, Transform, Update, Vec3, Visibility,
-        With, Without,
+        shape::Cube, AlphaMode, Assets, Color, Commands, Component, GlobalTransform, Mesh,
+        PbrBundle, Plugin, Query, Res, ResMut, Resource, StandardMaterial, Startup, Transform,
+        Update, Vec3, Visibility, With, Without,
     },
     render::render_resource::PrimitiveTopology,
 };
@@ -11,7 +11,10 @@ use bevy_egui::egui::color_picker::Alpha;
 use bevy_rapier3d::prelude::{QueryFilter, RapierContext};
 use controller::controller::CameraTag;
 
-use crate::{palyer::{PlayerController, PlayerStorge}, player_controller::PlayerMe};
+use crate::{
+    palyer::{PlayerController, PlayerStorge},
+    player_controller::PlayerMe,
+};
 
 fn get_pos_chunk_center(vec3: Vec3, normal: Vec3) -> Vec3 {
     // 应该是命中点所在的面的中点
@@ -24,7 +27,7 @@ fn get_pos_chunk_center(vec3: Vec3, normal: Vec3) -> Vec3 {
 }
 
 pub fn touth_mesh_ray_cast(
-    query: Query<&Transform, With<CameraTag>>,
+    query: Query<&GlobalTransform, With<CameraTag>>,
     rapier_context: Res<RapierContext>,
     player_storge: Res<PlayerStorge>,
     mut choose_cube: ResMut<ChooseCube>,
@@ -34,13 +37,19 @@ pub fn touth_mesh_ray_cast(
     >,
     // mut query_visibility: Query<&mut Visibility, With<HelpCube>>,
 ) {
-    let Ok((mut chue_pos,mut visibility)) = query_help_cube.get_single_mut() else{return;};
+    let Ok((mut chue_pos,mut visibility)) = query_help_cube.get_single_mut() else{
+        println!("not found CameraTag.");
+        return;
+    };
     // let Ok(mut visibility) = query_visibility.get_single() else{return;};
 
     //  这里需要知道当前相机的位置
-    let Ok(tfr) = query.get_single() else {return;};
-    let ray_pos = tfr.translation;
+    let Ok(tfr) = query.get_single() else {
+        println!("not found CameraTag");
+        return;};
+    let ray_pos = tfr.translation();
     let ray_dir = tfr.forward();
+    // println!("ray_pos: {:?}", ray_pos);
     // println!("ray_dir {:?}", ray_dir);
     let max_toi = 3.0;
     let solid = true;
@@ -59,6 +68,8 @@ pub fn touth_mesh_ray_cast(
             let hit_point = intersect.point;
             let normal = intersect.normal;
             let center_point = get_pos_chunk_center(hit_point, normal);
+            let out_center_point = get_pos_chunk_center(hit_point, -normal);
+
             if let Some(old_center) = choose_cube.center {
                 if old_center.distance(center_point) <= 0.0 {
                     // println!("物体没有被移动");
@@ -73,16 +84,17 @@ pub fn touth_mesh_ray_cast(
             // 设置选中点
             choose_cube.choose_on = Some(hit_point);
             choose_cube.center = Some(center_point);
+            choose_cube.out_center = Some(out_center_point);
             // println!("normal {:?}", normal);
         }
         None => {
             // println!("移动出了焦点");
             // 设置不可见
-            // FIXME: 这里用于调试
             *visibility = Visibility::Hidden;
             // 设置没有选中点
             choose_cube.choose_on = None;
             choose_cube.center = None;
+            choose_cube.out_center = None;
         }
     }
 }
@@ -90,11 +102,14 @@ pub fn touth_mesh_ray_cast(
 #[derive(Component)]
 pub struct HelpCube;
 
-#[derive(Resource)]
+#[derive(Resource, Debug, Clone, Copy)]
 pub struct ChooseCube {
     // 选中的点
     pub choose_on: Option<Vec3>,
+    // 选择中的点对应的方块
     pub center: Option<Vec3>,
+    // 选中点 法向量对面的方块
+    pub out_center: Option<Vec3>,
 }
 
 impl ChooseCube {
@@ -102,6 +117,7 @@ impl ChooseCube {
         Self {
             choose_on: None,
             center: None,
+            out_center: None,
         }
     }
 }
@@ -127,7 +143,6 @@ pub fn setup_cube(
             ..Default::default()
         })
         .insert(HelpCube);
-    // .insert(DrawOrder(1));
 }
 pub struct MyRayCastPlugin;
 
