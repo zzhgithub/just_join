@@ -1,7 +1,8 @@
 use bevy::{
     prelude::{
         warn, Component, EventReader, EventWriter, Input, IntoSystemConfigs, IntoSystemSetConfigs,
-        KeyCode, Plugin, PreUpdate, Quat, Query, Res, Startup, SystemSet, Transform, Vec3, With,
+        KeyCode, Plugin, PreUpdate, Quat, Query, Res, Resource, Startup, SystemSet, Transform,
+        Vec3, With,
     },
     time::Time,
     window::{CursorGrabMode, PrimaryWindow, Window},
@@ -48,6 +49,7 @@ impl Plugin for CharacterControllerPlugin {
             .add_event::<ForceEvent>()
             .init_resource::<MouseSettings>()
             .add_systems(Startup, initial_grab_cursor)
+            .insert_resource(ControllerFlag { flag: true })
             .configure_sets(
                 PreUpdate,
                 // chain() will ensure sets run in the order they are listed
@@ -85,6 +87,11 @@ pub struct InputState {
     pub jump: bool,
     pub up: bool,
     pub down: bool,
+}
+
+#[derive(Debug, Resource)]
+pub struct ControllerFlag {
+    pub flag: bool,
 }
 
 #[derive(Debug, Component, Clone, Copy)]
@@ -137,8 +144,12 @@ pub fn input_to_events(
     mut force_events: EventWriter<ForceEvent>,
     mut controller_query: Query<(&Mass, &LookEntity, &mut CharacterController)>,
     look_direction_query: Query<&LookDirection>,
+    controller_flag: Res<ControllerFlag>,
 ) {
     let xz = Vec3::new(1.0, 0.0, 1.0);
+    if (!controller_flag.flag) {
+        return;
+    }
     for (mass, look_entity, mut controller) in controller_query.iter_mut() {
         controller.sim_to_render += time.delta_seconds();
 

@@ -1,13 +1,15 @@
 // 测试使用命令
 
 use bevy::prelude::{
-    App, Component, EventReader, IntoSystemConfigs, Plugin, Query, ResMut, Transform, Update, Vec3,
-    With,
+    App, Component, EventReader, IntoSystemConfigs, Plugin, PreUpdate, Query, Res, ResMut,
+    Transform, Update, Vec3, With,
 };
 use bevy_console::{
-    AddConsoleCommand, ConsoleCommand, ConsoleCommandEntered, ConsolePlugin, ConsoleSet,
+    AddConsoleCommand, ConsoleCommand, ConsoleCommandEntered, ConsoleOpen, ConsolePlugin,
+    ConsoleSet,
 };
 use clap::Parser;
+use controller::controller::ControllerFlag;
 
 use crate::{
     clip_spheres::{ClipSpheres, Sphere3},
@@ -20,9 +22,15 @@ pub struct ConsoleCommandPlugins;
 impl Plugin for ConsoleCommandPlugins {
     fn build(&self, app: &mut App) {
         app.add_plugins(ConsolePlugin)
+            .add_systems(PreUpdate, sync_flags)
             .add_systems(Update, raw_commands.in_set(ConsoleSet::Commands))
             .add_console_command::<TpCommand, _>(tp_commands::<PlayerMe>);
     }
+}
+
+// 保持打开时不能操作人物
+fn sync_flags(mut controller_flag: ResMut<ControllerFlag>, console_open: Res<ConsoleOpen>) {
+    controller_flag.flag = !console_open.open;
 }
 
 fn raw_commands(mut console_commands: EventReader<ConsoleCommandEntered>) {
