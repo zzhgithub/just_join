@@ -14,8 +14,8 @@ use bevy_rapier3d::prelude::{
 };
 use controller::{
     controller::{
-        controller_to_pitch, controller_to_yaw, BodyTag, CameraTag, CharacterController, HeadTag,
-        YawTag,
+        controller_to_pitch, controller_to_yaw, BodyTag, CameraTag, CharacterController,
+        ControllerFlag, HeadTag, YawTag,
     },
     look::{LookDirection, LookEntity},
     rapier::RapierDynamicImpulseCharacterControllerPlugin,
@@ -185,8 +185,13 @@ struct ThirdPerson {
 fn toggle_third_person(
     keyboard_input: Res<Input<KeyCode>>,
     mut camera_transforms: Query<(&mut Transform, &mut ThirdPerson)>,
+    controller_flag: Res<ControllerFlag>,
     mut models: Query<&mut Visibility>,
 ) {
+    // 如果是不能控制状态禁止控制
+    if (!controller_flag.flag) {
+        return;
+    }
     if keyboard_input.just_pressed(KeyCode::T) {
         for (mut camera_transform, mut third_person) in camera_transforms.iter_mut() {
             third_person.is_third_person = !third_person.is_third_person;
