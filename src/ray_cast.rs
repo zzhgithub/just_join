@@ -1,7 +1,7 @@
 use bevy::{
     pbr::wireframe::Wireframe,
     prelude::{
-        shape::Cube, AlphaMode, Assets, Color, Commands, Component, GlobalTransform, Mesh,
+        shape::Cube, AlphaMode, Assets, Color, Commands, Component, Gizmos, GlobalTransform, Mesh,
         PbrBundle, Plugin, Query, Res, ResMut, Resource, StandardMaterial, Startup, Transform,
         Update, Vec3, Visibility, With, Without,
     },
@@ -19,11 +19,16 @@ use crate::{
 fn get_pos_chunk_center(vec3: Vec3, normal: Vec3) -> Vec3 {
     // 应该是命中点所在的面的中点
     let mid_pos = Vec3::new(
-        vec3.x.floor() + 0.5 * (if normal.x == 0.0 { 1.0 } else { 0.0 }),
-        vec3.y.floor() + 0.5 * (if normal.y == 0.0 { 1.0 } else { 0.0 }),
-        vec3.z.floor() + 0.5 * (if normal.z == 0.0 { 1.0 } else { 0.0 }),
+        calc_point(vec3.x, normal.x),
+        calc_point(vec3.y, normal.y),
+        calc_point(vec3.z, normal.z),
     );
     mid_pos - (normal * 0.5)
+}
+
+fn calc_point(x: f32, normal: f32) -> f32 {
+    // 这里 使用四舍五入进行计算
+    ((x * 1000.0).round() / 1000.0).floor() + 0.5 * (if normal == 0.0 { 1.0 } else { 0.0 })
 }
 
 pub fn touth_mesh_ray_cast(
@@ -35,6 +40,7 @@ pub fn touth_mesh_ray_cast(
         (&mut Transform, &mut Visibility),
         (With<HelpCube>, Without<CameraTag>),
     >,
+    mut gizmos: Gizmos,
     // mut query_visibility: Query<&mut Visibility, With<HelpCube>>,
 ) {
     let Ok((mut chue_pos,mut visibility)) = query_help_cube.get_single_mut() else{
@@ -52,6 +58,7 @@ pub fn touth_mesh_ray_cast(
     // println!("ray_pos: {:?}", ray_pos);
     // println!("ray_dir {:?}", ray_dir);
     let max_toi = 5.0;
+    // gizmos.ray(ray_pos, ray_dir * max_toi, Color::BLUE);
     let solid = true;
     // 这个参数是做什么的？
     let filter: QueryFilter<'_> = QueryFilter::exclude_dynamic()
@@ -67,15 +74,20 @@ pub fn touth_mesh_ray_cast(
             // 选择了物体
             let hit_point = intersect.point;
             let normal = intersect.normal;
+            // 显示碰撞到的法向量
+            gizmos.ray(hit_point, normal, Color::RED);
+            gizmos.circle(hit_point, normal, 0.05, Color::BLACK);
             let center_point = get_pos_chunk_center(hit_point, normal);
+            // println!("{:?} | {:?} = {:?}", hit_point, normal, center_point);
+            // println!("{:?}", center_point);
             let out_center_point = get_pos_chunk_center(hit_point, -normal);
 
-            if let Some(old_center) = choose_cube.center {
-                if old_center.distance(center_point) <= 0.0 {
-                    // println!("物体没有被移动");
-                    return;
-                }
-            }
+            // if let Some(old_center) = choose_cube.center {
+            //     if old_center.distance(center_point) <= 0.0 {
+            //         // println!("物体没有被移动");
+            //         return;
+            //     }
+            // }
             // 设置可见
             *visibility = Visibility::Visible;
             // 设置位置
@@ -130,7 +142,7 @@ pub fn setup_cube(
 ) {
     commands
         .spawn(PbrBundle {
-            mesh: mesh_assets.add(create_cube_wireframe(1.01)),
+            mesh: mesh_assets.add(create_cube_wireframe(1.001)),
             visibility: bevy::prelude::Visibility::Hidden,
             material: materials.add(StandardMaterial {
                 unlit: true,
@@ -194,4 +206,10 @@ fn create_cube_wireframe(size: f32) -> Mesh {
     mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vertices);
     mesh.set_indices(Some(bevy::render::mesh::Indices::U32(indices)));
     return mesh.into();
+}
+
+#[test]
+fn test() {
+    let a: f32 = -0.5;
+    println!("{}", a.floor());
 }
