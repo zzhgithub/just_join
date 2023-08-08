@@ -33,7 +33,7 @@ fn raw_commands(mut console_commands: EventReader<ConsoleCommandEntered>) {
 
 // transform body to point
 #[derive(Parser, ConsoleCommand)]
-#[command(name = "tp")]
+#[command(name = "tp", about = "transform body to point")]
 struct TpCommand {
     /// x
     x: Option<f32>,
