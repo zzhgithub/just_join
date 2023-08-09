@@ -86,12 +86,21 @@ pub fn get_chunk_key_i3_by_vec3(point: Vec3) -> IVec3 {
 }
 
 fn get_chunk_key_axis(x: f32) -> i32 {
-    let x_dot = if x > 0. { x.ceil() } else { x.floor() };
-    if x_dot > 8. {
-        return (x_dot - (CHUNK_SIZE as f32 / 2.0)) as i32 / CHUNK_SIZE + 1;
+    let x_dot = x * 10.;
+    if x > 8. {
+        return ((x_dot - (CHUNK_SIZE as f32 / 2.0) * 10.) as i32 / (CHUNK_SIZE * 10)) + 1;
     }
-    if x_dot < -8. {
-        return (x_dot + (CHUNK_SIZE as f32 / 2.0)) as i32 / CHUNK_SIZE - 1;
+    if x < -8. {
+        return ((x_dot + (CHUNK_SIZE as f32 / 2.0) * 10.) as i32 / (CHUNK_SIZE * 10)) - 1;
     }
     0
+}
+
+#[test]
+fn test_chunk_key_axis() {
+    let res = get_chunk_key_axis(24.5);
+    println!("{}", res);
+
+    let res2 = get_chunk_key_i3_by_vec3(Vec3::new(2.5, 24.5, 0.5));
+    println!("{}", res2);
 }

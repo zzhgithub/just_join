@@ -75,6 +75,18 @@ pub fn spawn_character(
         .insert(RigidBody::Dynamic)
         // .insert(Ccd::disabled())
         .insert(Sleeping::default())
+        .insert(Damping {
+            linear_damping: 0.0,
+            angular_damping: 10.0,
+        })
+        .insert(Friction {
+            coefficient: 0.0,
+            combine_rule: CoefficientCombineRule::Min,
+        })
+        .insert(Restitution {
+            coefficient: 0.0,
+            combine_rule: CoefficientCombineRule::Min,
+        })
         .insert(TransformBundle::from(Transform::from_xyz(
             character_settings.body_position.x,
             character_settings.body_position.y,

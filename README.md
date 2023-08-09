@@ -1,5 +1,7 @@
 # just_join
 
+## 游戏截图
+![画面](pic/test.gif)
 
 
 # 性能优化方法
@@ -44,4 +46,4 @@ https://github.com/bevyengine/bevy/blob/main/docs/profiling.md
 3. 这使用的数据 是ron格式 而不是使用的json
 
 # 材质加载
-todo: 要修改一个可以查看 并且修改数据的简单单元。
+todo: 要修改一个可以查看 并且修改数据的简单单元。 现在工具还没有手动配置

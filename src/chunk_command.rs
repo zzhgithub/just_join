@@ -57,6 +57,7 @@ pub fn do_command_tasks(
                                 voxel[index] = voxel_type;
                                 let mut chunk_key_y0 = chunk_key.clone();
                                 chunk_key_y0.0.y = 0;
+                                // todo: 这里可以等重新生成结束后再去 擅长效果应该要好一点
 
                                 if let Some(entity) = mesh_manager.entities.remove(&chunk_key_y0) {
                                     commands.entity(entity).despawn();
@@ -100,23 +101,6 @@ pub fn build_or_break(
             // 点转成 chunk_key 和 x, y, z 的方法？
             let (chunk_key, xyz) = vec3_to_chunk_key_any_xyz(pos);
             println!("左键点击 要处理的方块是[{:?}][{:?}]", chunk_key, xyz);
-            // TODO: 这生成一组数据
-            // for x_new in 0..=15 {
-            //     for y_new in 0..=15 {
-            //         for z_new in 0..=15 {
-            //             // let mut test = xyz.clone();
-            //             // test[1] = y_new;
-            //             let task = pool.spawn(async move {
-            //                 ChunkCommands::Change {
-            //                     chunk_key: chunk_key,
-            //                     pos: [x_new, y_new, z_new],
-            //                     voxel_type: Voxel::EMPTY,
-            //                 }
-            //             });
-            //             tasks.tasks.push(task);
-            //         }
-            //     }
-            // }
             let task = pool.spawn(async move {
                 ChunkCommands::Change {
                     chunk_key: chunk_key,
@@ -149,11 +133,9 @@ pub fn build_or_break(
 pub fn vec3_to_chunk_key_any_xyz(pos: Vec3) -> (ChunkKey, [u32; 3]) {
     println!("此时的位置是: {:?}", pos);
     let chunk_key = ChunkKey(get_chunk_key_i3_by_vec3(pos));
-    let x =
-        (pos.x - (chunk_key.0.x * CHUNK_SIZE) as f32 + CHUNK_SIZE as f32 / 2. - 0.5 - 1.) as u32;
+    let x = (pos.x - (chunk_key.0.x * CHUNK_SIZE) as f32 + CHUNK_SIZE as f32 / 2. - 0.5) as u32;
     let y = (pos.y - (chunk_key.0.y * CHUNK_SIZE) as f32 + CHUNK_SIZE as f32 / 2. - 0.5) as u32;
-    let z =
-        (pos.z - (chunk_key.0.z * CHUNK_SIZE) as f32 + CHUNK_SIZE as f32 / 2. - 0.5 - 1.) as u32;
+    let z = (pos.z - (chunk_key.0.z * CHUNK_SIZE) as f32 + CHUNK_SIZE as f32 / 2. - 0.5) as u32;
 
     return (chunk_key, [x, y, z]);
 }
@@ -171,12 +153,6 @@ impl Plugin for ChunkCommandsPlugin {
 
 #[test]
 fn test_chunk_key() {
-    let a = Vec3::new(1.0, 1.0, 1.0);
-    let a_k = a.as_ivec3() / CHUNK_SIZE;
-
-    let b = Vec3::new(-1.0, 1.0, 1.0);
-    let b_k = b.as_ivec3() / CHUNK_SIZE;
-
-    println!("a {:?} ", a_k);
-    println!("b {:?} ", b_k);
+    let (key, xyz) = vec3_to_chunk_key_any_xyz(Vec3::new(2.5, 24.5, 0.5));
+    print!("{:?},{:?}", key, xyz);
 }

@@ -22,6 +22,19 @@ pub fn gen_chunk_data_by_seed(seed: i32, chunk_key: ChunkKey) -> Vec<Voxel> {
     let noise = noise2d(chunk_key, seed);
     let noise2 = noise2d_ridge(chunk_key, seed);
 
+    // todo 测试代码
+    // if (chunk_key.0.x != 0 || chunk_key.0.y != 1 || chunk_key.0.z != 0) {
+    //     for i in 0..SampleShape::SIZE {
+    //         voxels.push(Voxel::EMPTY);
+    //     }
+    //     return voxels;
+    // } else {
+    //     for i in 0..SampleShape::SIZE {
+    //         voxels.push(Grass::into_voxel());
+    //     }
+    //     return voxels;
+    // }
+
     for i in 0..SampleShape::SIZE {
         let [x, y, z] = SampleShape::delinearize(i);
         let p_x = base_x + x as f32;
