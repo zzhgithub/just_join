@@ -30,6 +30,9 @@ pub enum ChunkCommands {
         pos: [u32; 3],
         voxel_type: Voxel,
     },
+    UpdateMesh {
+        chunk_key: ChunkKey,
+    },
 }
 
 #[derive(Debug, Resource)]
@@ -70,112 +73,48 @@ pub fn do_command_tasks(
                                 chunk_key_y0.0.y = 0;
                                 // todo: 这里可以等重新生成结束后再去 擅长效果应该要好一点
                                 // 要修改的数据
-                                let volexs: Vec<Voxel> =
-                                    chunk_map.get_with_neighbor_full_y(chunk_key_y0);
-                                match gen_mesh(volexs.to_owned(), material_config.clone()) {
-                                    Some(render_mesh) => {
-                                        let mesh_handle =
-                                            mesh_manager.mesh_storge.get(&chunk_key_y0).unwrap();
-                                        if let Some(mesh) = mesh_assets.get_mut(mesh_handle) {
-                                            *mesh = render_mesh;
-                                        }
-                                        // 没有生成mesh就不管反正后面要生成
-                                    }
-                                    None => {}
-                                };
-                                match gen_mesh_water(
-                                    pick_water(volexs.clone()),
+                                update_mesh(
+                                    chunk_map.as_mut(),
+                                    chunk_key_y0.clone(),
                                     material_config.clone(),
-                                ) {
-                                    Some(water_mesh) => {
-                                        let mesh_handle = mesh_manager
-                                            .water_mesh_storge
-                                            .get(&chunk_key_y0)
-                                            .unwrap();
-                                        if let Some(mesh) = mesh_assets.get_mut(mesh_handle) {
-                                            *mesh = water_mesh;
-                                        }
-                                    }
-                                    None => {}
-                                }
+                                    mesh_manager.as_mut(),
+                                    mesh_assets.as_mut(),
+                                );
                                 // 重新生成物理
                                 // FIXME: 这里后续也不应该重新生成！
-                                if (mesh_manager.mesh_storge.contains_key(&chunk_key_y0)) {
-                                    let mesh_handle =
-                                        mesh_manager.mesh_storge.get(&chunk_key_y0).unwrap();
-                                    if let Some(mesh) = mesh_assets.get(mesh_handle) {
-                                        // 生成 collider 碰撞体
-                                        if let Some(positions) = mesh
-                                            .attribute(Mesh::ATTRIBUTE_POSITION)
-                                            .unwrap()
-                                            .as_float3()
-                                        {
-                                            let indices: Vec<u32> = mesh
-                                                .indices()
-                                                .unwrap()
-                                                .iter()
-                                                .map(|x| x as u32)
-                                                .collect();
-                                            let collider_vertices: Vec<Vec3> = positions
-                                                .iter()
-                                                .cloned()
-                                                .map(|p| Vec3::from(p))
-                                                .collect();
-                                            let collider_indices: Vec<[u32; 3]> = indices
-                                                .chunks(3)
-                                                .map(|i| [i[0], i[1], i[2]])
-                                                .collect();
-                                            let collider: Collider = Collider::trimesh(
-                                                collider_vertices,
-                                                collider_indices,
-                                            );
-                                            let entity = commands
-                                                .spawn((
-                                                    TerrainPhysics,
-                                                    Transform::from_xyz(
-                                                        (chunk_key.0.x * CHUNK_SIZE) as f32
-                                                            - CHUNK_SIZE as f32 / 2.0
-                                                            - 1.0,
-                                                        -128.0 + CHUNK_SIZE as f32 / 2.0,
-                                                        (chunk_key.0.z * CHUNK_SIZE) as f32
-                                                            - CHUNK_SIZE as f32 / 2.0
-                                                            - 1.0,
-                                                    ),
-                                                    GlobalTransform::default(),
-                                                ))
-                                                .insert(RigidBody::Fixed)
-                                                .insert(collider)
-                                                .id();
-                                            if let Some(old_id) = collider_manager
-                                                .entities
-                                                .insert(chunk_key_y0, entity)
-                                            {
-                                                commands.entity(old_id).despawn();
-                                            }
-                                        }
-                                    }
-                                }
-                                // if let Some(entity) = mesh_manager.entities.remove(&chunk_key_y0) {
-                                //     commands.entity(entity).despawn();
-                                //     mesh_manager.fast_key.remove(&chunk_key_y0);
-                                // }
-                                // if let Some(entity) =
-                                //     mesh_manager.water_entities.remove(&chunk_key_y0)
-                                // {
-                                //     commands.entity(entity).despawn();
-                                //     mesh_manager.fast_key.remove(&chunk_key_y0);
-                                // }
-                                // if let Some(entity) =
-                                //     collider_manager.entities.remove(&chunk_key_y0)
-                                // {
-                                //     commands.entity(entity).despawn();
-                                // }
+                                update_collider(
+                                    &mut commands,
+                                    mesh_manager.as_mut(),
+                                    chunk_key_y0.clone(),
+                                    mesh_assets.as_mut(),
+                                    collider_manager.as_mut(),
+                                );
                             }
                             None => {
                                 println!("尝试修改没有生成chunk的数据");
                             }
                         }
                         // 然后 擅长 对应的chunk_y 层数据 对应的 chunk_mesh和 和 collider
+                    }
+                    ChunkCommands::UpdateMesh { chunk_key } => {
+                        let mut chunk_key_y0 = chunk_key.clone();
+                        chunk_key_y0.0.y = 0;
+                        if (mesh_manager.mesh_storge.contains_key(&chunk_key_y0)) {
+                            update_mesh(
+                                chunk_map.as_mut(),
+                                chunk_key_y0.clone(),
+                                material_config.clone(),
+                                mesh_manager.as_mut(),
+                                mesh_assets.as_mut(),
+                            );
+                            update_collider(
+                                &mut commands,
+                                mesh_manager.as_mut(),
+                                chunk_key_y0.clone(),
+                                mesh_assets.as_mut(),
+                                collider_manager.as_mut(),
+                            );
+                        }
                     }
                 }
             }
@@ -196,7 +135,7 @@ pub fn build_or_break(
         if let Some(pos) = choose_cube.center {
             // 点转成 chunk_key 和 x, y, z 的方法？
             let (chunk_key, xyz) = vec3_to_chunk_key_any_xyz(pos);
-            println!("左键点击 要处理的方块是[{:?}][{:?}]", chunk_key, xyz);
+            println!("左键点击 要打击的方块是[{:?}][{:?}]", chunk_key, xyz);
             let task = pool.spawn(async move {
                 ChunkCommands::Change {
                     chunk_key: chunk_key,
@@ -205,6 +144,48 @@ pub fn build_or_break(
                 }
             });
             tasks.tasks.push(task);
+            // FIXME: 遇到的边界问题 代码不优雅可以优化
+            // 注意这里 有顺序问题!
+            if xyz[0] == 0 {
+                let mut new_chunk_key_i3 = chunk_key.0.clone();
+                new_chunk_key_i3.x -= 1;
+                let task_new = pool.spawn(async move {
+                    ChunkCommands::UpdateMesh {
+                        chunk_key: ChunkKey(new_chunk_key_i3),
+                    }
+                });
+                tasks.tasks.push(task_new);
+            }
+            if xyz[0] == CHUNK_SIZE_U32 - 1 {
+                let mut new_chunk_key_i3 = chunk_key.0.clone();
+                new_chunk_key_i3.x += 1;
+                let task_new = pool.spawn(async move {
+                    ChunkCommands::UpdateMesh {
+                        chunk_key: ChunkKey(new_chunk_key_i3),
+                    }
+                });
+                tasks.tasks.push(task_new);
+            }
+            if xyz[2] == 0 {
+                let mut new_chunk_key_i3 = chunk_key.0.clone();
+                new_chunk_key_i3.z -= 1;
+                let task_new = pool.spawn(async move {
+                    ChunkCommands::UpdateMesh {
+                        chunk_key: ChunkKey(new_chunk_key_i3),
+                    }
+                });
+                tasks.tasks.push(task_new);
+            }
+            if xyz[2] == CHUNK_SIZE_U32 - 1 {
+                let mut new_chunk_key_i3 = chunk_key.0.clone();
+                new_chunk_key_i3.z += 1;
+                let task_new = pool.spawn(async move {
+                    ChunkCommands::UpdateMesh {
+                        chunk_key: ChunkKey(new_chunk_key_i3),
+                    }
+                });
+                tasks.tasks.push(task_new);
+            }
         }
     }
 
@@ -223,6 +204,78 @@ pub fn build_or_break(
             });
             tasks.tasks.push(task);
         }
+    }
+}
+
+pub fn update_collider(
+    commands: &mut Commands,
+    mesh_manager: &mut MeshManager,
+    chunk_key_y0: ChunkKey,
+    mesh_assets: &mut Assets<Mesh>,
+    collider_manager: &mut ColliderManager,
+) {
+    if (mesh_manager.mesh_storge.contains_key(&chunk_key_y0)) {
+        let mesh_handle = mesh_manager.mesh_storge.get(&chunk_key_y0).unwrap();
+        if let Some(mesh) = mesh_assets.get(mesh_handle) {
+            // 生成 collider 碰撞体
+            if let Some(positions) = mesh
+                .attribute(Mesh::ATTRIBUTE_POSITION)
+                .unwrap()
+                .as_float3()
+            {
+                let indices: Vec<u32> = mesh.indices().unwrap().iter().map(|x| x as u32).collect();
+                let collider_vertices: Vec<Vec3> =
+                    positions.iter().cloned().map(|p| Vec3::from(p)).collect();
+                let collider_indices: Vec<[u32; 3]> =
+                    indices.chunks(3).map(|i| [i[0], i[1], i[2]]).collect();
+                let collider: Collider = Collider::trimesh(collider_vertices, collider_indices);
+                let entity = commands
+                    .spawn((
+                        TerrainPhysics,
+                        Transform::from_xyz(
+                            (chunk_key_y0.0.x * CHUNK_SIZE) as f32 - CHUNK_SIZE as f32 / 2.0 - 1.0,
+                            -128.0 + CHUNK_SIZE as f32 / 2.0,
+                            (chunk_key_y0.0.z * CHUNK_SIZE) as f32 - CHUNK_SIZE as f32 / 2.0 - 1.0,
+                        ),
+                        GlobalTransform::default(),
+                    ))
+                    .insert(RigidBody::Fixed)
+                    .insert(collider)
+                    .id();
+                if let Some(old_id) = collider_manager.entities.insert(chunk_key_y0, entity) {
+                    commands.entity(old_id).despawn();
+                }
+            }
+        }
+    }
+}
+
+pub fn update_mesh(
+    chunk_map: &mut ChunkMap,
+    chunk_key_y0: ChunkKey,
+    material_config: MaterailConfiguration,
+    mesh_manager: &mut MeshManager,
+    mesh_assets: &mut Assets<Mesh>,
+) {
+    let volexs: Vec<Voxel> = chunk_map.get_with_neighbor_full_y(chunk_key_y0);
+    match gen_mesh(volexs.to_owned(), material_config.clone()) {
+        Some(render_mesh) => {
+            let mesh_handle = mesh_manager.mesh_storge.get(&chunk_key_y0).unwrap();
+            if let Some(mesh) = mesh_assets.get_mut(mesh_handle) {
+                *mesh = render_mesh;
+            }
+            // 没有生成mesh就不管反正后面要生成
+        }
+        None => {}
+    };
+    match gen_mesh_water(pick_water(volexs.clone()), material_config.clone()) {
+        Some(water_mesh) => {
+            let mesh_handle = mesh_manager.water_mesh_storge.get(&chunk_key_y0).unwrap();
+            if let Some(mesh) = mesh_assets.get_mut(mesh_handle) {
+                *mesh = water_mesh;
+            }
+        }
+        None => {}
     }
 }
 
