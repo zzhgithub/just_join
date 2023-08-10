@@ -27,6 +27,7 @@ use crate::{
 #[derive(Debug, Clone, Resource, Default)]
 pub struct MeshManager {
     pub mesh_storge: SmallKeyHashMap<ChunkKey, Handle<Mesh>>,
+    pub water_mesh_storge: SmallKeyHashMap<ChunkKey, Handle<Mesh>>,
     pub entities: SmallKeyHashMap<ChunkKey, Entity>,
     pub water_entities: SmallKeyHashMap<ChunkKey, Entity>,
     pub fast_key: HashSet<ChunkKey>,
@@ -114,6 +115,10 @@ pub fn update_mesh_system(
                     };
                     match gen_mesh_water(pick_water(voxels.clone()), material_config.clone()) {
                         Some(water_mesh) => {
+                            let water_mesh_handle = mesh_assets.add(water_mesh);
+                            mesh_manager
+                                .water_mesh_storge
+                                .insert(chunk_key, water_mesh_handle.clone());
                             mesh_manager.water_entities.insert(
                                 chunk_key,
                                 commands
@@ -127,7 +132,7 @@ pub fn update_mesh_system(
                                                 - CHUNK_SIZE as f32 / 2.0
                                                 - 1.0,
                                         ),
-                                        mesh: mesh_assets.add(water_mesh),
+                                        mesh: water_mesh_handle,
                                         material: materials_assets.add(StandardMaterial {
                                             base_color: Color::rgba(
                                                 10. / 255.,

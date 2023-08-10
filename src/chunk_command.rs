@@ -1,18 +1,25 @@
 // chunk 修改命令相关
 
 use bevy::{
-    prelude::{Commands, Input, Last, MouseButton, Plugin, ResMut, Resource, Update, Vec3},
+    prelude::{
+        AlphaMode, Assets, Color, Commands, GlobalTransform, Input, Last, MaterialMeshBundle, Mesh,
+        MouseButton, Plugin, Res, ResMut, Resource, StandardMaterial, Transform, Update, Vec3,
+    },
     tasks::{AsyncComputeTaskPool, Task},
 };
+use bevy_rapier3d::prelude::{Collider, RigidBody};
 use ndshape::{ConstShape, ConstShape3u32};
 
 use crate::{
     chunk::{get_chunk_key_i3_by_vec3, ChunkKey},
     chunk_generator::ChunkMap,
-    collider_generator::ColliderManager,
+    collider_generator::{ColliderManager, TerrainPhysics},
+    mesh::{gen_mesh, gen_mesh_water, pick_water},
     mesh_generator::MeshManager,
+    mesh_material::MaterialStorge,
     ray_cast::ChooseCube,
     voxel::Voxel,
+    voxel_config::MaterailConfiguration,
     CHUNK_SIZE, CHUNK_SIZE_U32,
 };
 
@@ -37,6 +44,10 @@ pub fn do_command_tasks(
     mut tasks: ResMut<ChunkCommandsTasks>,
     mut collider_manager: ResMut<ColliderManager>,
     mut mesh_manager: ResMut<MeshManager>,
+    material_config: Res<MaterailConfiguration>,
+    mut materials_assets: ResMut<Assets<StandardMaterial>>,
+    mut mesh_assets: ResMut<Assets<Mesh>>,
+    materials: Res<MaterialStorge>,
 ) {
     //FIXME: 首先先分组 同一个chunkMap的数据一起处理合并 后面处理多了再说
     for ele in tasks.tasks.drain(..) {
@@ -58,22 +69,107 @@ pub fn do_command_tasks(
                                 let mut chunk_key_y0 = chunk_key.clone();
                                 chunk_key_y0.0.y = 0;
                                 // todo: 这里可以等重新生成结束后再去 擅长效果应该要好一点
-
-                                if let Some(entity) = mesh_manager.entities.remove(&chunk_key_y0) {
-                                    commands.entity(entity).despawn();
-                                    mesh_manager.fast_key.remove(&chunk_key_y0);
+                                // 要修改的数据
+                                let volexs: Vec<Voxel> =
+                                    chunk_map.get_with_neighbor_full_y(chunk_key_y0);
+                                match gen_mesh(volexs.to_owned(), material_config.clone()) {
+                                    Some(render_mesh) => {
+                                        let mesh_handle =
+                                            mesh_manager.mesh_storge.get(&chunk_key_y0).unwrap();
+                                        if let Some(mesh) = mesh_assets.get_mut(mesh_handle) {
+                                            *mesh = render_mesh;
+                                        }
+                                        // 没有生成mesh就不管反正后面要生成
+                                    }
+                                    None => {}
+                                };
+                                match gen_mesh_water(
+                                    pick_water(volexs.clone()),
+                                    material_config.clone(),
+                                ) {
+                                    Some(water_mesh) => {
+                                        let mesh_handle = mesh_manager
+                                            .water_mesh_storge
+                                            .get(&chunk_key_y0)
+                                            .unwrap();
+                                        if let Some(mesh) = mesh_assets.get_mut(mesh_handle) {
+                                            *mesh = water_mesh;
+                                        }
+                                    }
+                                    None => {}
                                 }
-                                if let Some(entity) =
-                                    mesh_manager.water_entities.remove(&chunk_key_y0)
-                                {
-                                    commands.entity(entity).despawn();
-                                    mesh_manager.fast_key.remove(&chunk_key_y0);
+                                // 重新生成物理
+                                // FIXME: 这里后续也不应该重新生成！
+                                if (mesh_manager.mesh_storge.contains_key(&chunk_key_y0)) {
+                                    let mesh_handle =
+                                        mesh_manager.mesh_storge.get(&chunk_key_y0).unwrap();
+                                    if let Some(mesh) = mesh_assets.get(mesh_handle) {
+                                        // 生成 collider 碰撞体
+                                        if let Some(positions) = mesh
+                                            .attribute(Mesh::ATTRIBUTE_POSITION)
+                                            .unwrap()
+                                            .as_float3()
+                                        {
+                                            let indices: Vec<u32> = mesh
+                                                .indices()
+                                                .unwrap()
+                                                .iter()
+                                                .map(|x| x as u32)
+                                                .collect();
+                                            let collider_vertices: Vec<Vec3> = positions
+                                                .iter()
+                                                .cloned()
+                                                .map(|p| Vec3::from(p))
+                                                .collect();
+                                            let collider_indices: Vec<[u32; 3]> = indices
+                                                .chunks(3)
+                                                .map(|i| [i[0], i[1], i[2]])
+                                                .collect();
+                                            let collider: Collider = Collider::trimesh(
+                                                collider_vertices,
+                                                collider_indices,
+                                            );
+                                            let entity = commands
+                                                .spawn((
+                                                    TerrainPhysics,
+                                                    Transform::from_xyz(
+                                                        (chunk_key.0.x * CHUNK_SIZE) as f32
+                                                            - CHUNK_SIZE as f32 / 2.0
+                                                            - 1.0,
+                                                        -128.0 + CHUNK_SIZE as f32 / 2.0,
+                                                        (chunk_key.0.z * CHUNK_SIZE) as f32
+                                                            - CHUNK_SIZE as f32 / 2.0
+                                                            - 1.0,
+                                                    ),
+                                                    GlobalTransform::default(),
+                                                ))
+                                                .insert(RigidBody::Fixed)
+                                                .insert(collider)
+                                                .id();
+                                            if let Some(old_id) = collider_manager
+                                                .entities
+                                                .insert(chunk_key_y0, entity)
+                                            {
+                                                commands.entity(old_id).despawn();
+                                            }
+                                        }
+                                    }
                                 }
-                                if let Some(entity) =
-                                    collider_manager.entities.remove(&chunk_key_y0)
-                                {
-                                    commands.entity(entity).despawn();
-                                }
+                                // if let Some(entity) = mesh_manager.entities.remove(&chunk_key_y0) {
+                                //     commands.entity(entity).despawn();
+                                //     mesh_manager.fast_key.remove(&chunk_key_y0);
+                                // }
+                                // if let Some(entity) =
+                                //     mesh_manager.water_entities.remove(&chunk_key_y0)
+                                // {
+                                //     commands.entity(entity).despawn();
+                                //     mesh_manager.fast_key.remove(&chunk_key_y0);
+                                // }
+                                // if let Some(entity) =
+                                //     collider_manager.entities.remove(&chunk_key_y0)
+                                // {
+                                //     commands.entity(entity).despawn();
+                                // }
                             }
                             None => {
                                 println!("尝试修改没有生成chunk的数据");
