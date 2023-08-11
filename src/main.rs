@@ -28,6 +28,7 @@ use mesh_generator::{
 use bevy_egui::EguiPlugin;
 use mesh_material::{BindlessMaterial, MaterialStorge};
 use player_controller::{PlayerControllerPlugin, PlayerMe};
+use player_ui::PlayerUiPlugin;
 use ray_cast::MyRayCastPlugin;
 use sky::SkyPlugin;
 use structopt::StructOpt;
@@ -37,6 +38,7 @@ use voxel_config::{MaterailConfiguration, VoxelMaterialToolPulgin};
 mod chunk;
 mod chunk_command;
 mod chunk_generator;
+mod classes;
 mod clip_spheres;
 mod collider_generator;
 mod console_command;
@@ -48,6 +50,8 @@ mod mesh_generator;
 mod mesh_material;
 mod palyer;
 mod player_controller;
+mod player_ui;
+
 mod ray_cast;
 mod sky;
 mod voxel;
@@ -82,6 +86,7 @@ fn main() {
                 .add_plugins(bevy_inspector_egui::DefaultInspectorConfigPlugin)
                 .add_plugins(VoxelMaterialToolPulgin)
                 .add_plugins(ConsoleCommandPlugins)
+                // .add_plugins(PlayerUiPlugin)
                 .run();
         }
         RunMode::Game => {
@@ -92,6 +97,8 @@ fn main() {
                 // .add_plugins(PlayerPlugin)
                 //FIXME: 这个物品获取又基本无效了 物理引擎不能识别到碰撞了
                 .add_plugins(MyRayCastPlugin)
+                // 添加用户UI相关的接口
+                .add_plugins(PlayerUiPlugin)
                 .add_plugins(SkyPlugin)
                 // .add_plugins(EguiPlugin)
                 .add_plugins(bevy_inspector_egui::DefaultInspectorConfigPlugin) // adds default options and `InspectorEguiImpl`s

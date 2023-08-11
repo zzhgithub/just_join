@@ -402,6 +402,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy-ui-dsl"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "786bd547ec90da38c01dc91ee69f56c1c4d095ead38e3620ad3eafa0e3660738"
+dependencies = [
+ "bevy_asset",
+ "bevy_ecs",
+ "bevy_hierarchy",
+ "bevy_render",
+ "bevy_text",
+ "bevy_ui",
+]
+
+[[package]]
 name = "bevy_a11y"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3393,6 +3407,7 @@ dependencies = [
  "ahash 0.8.3",
  "bevy",
  "bevy-inspector-egui",
+ "bevy-ui-dsl",
  "bevy_atmosphere",
  "bevy_console",
  "bevy_egui",
