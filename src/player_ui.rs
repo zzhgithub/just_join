@@ -1,11 +1,15 @@
-use crate::classes::*;
+use crate::{
+    classes::*,
+    staff::{Staff, StaffInfoStroge},
+    voxel::{Grass, VoxelMaterial},
+};
 use bevy::{
     input::mouse::MouseWheel,
     prelude::{
         App, AssetServer, Changed, Color, Commands, Component, EventReader, Events, Input, KeyCode,
         Plugin, Query, Res, ResMut, Resource, Startup, Update,
     },
-    ui::{BorderColor, Interaction, Node},
+    ui::{BackgroundColor, BorderColor, Interaction, Node, UiImage},
 };
 use bevy_ui_dsl::*;
 use controller::controller::ControllerFlag;
@@ -25,9 +29,18 @@ pub struct PlayerUiPlugin;
 impl Plugin for PlayerUiPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActiveToolbar { index: 0 })
+            .insert_resource(HandHolder(None))
             .add_systems(Startup, setup_ui)
-            .add_systems(Update, active_system)
-            .add_systems(Update, (choose_toolbar, choose_by_wheel, choose_by_key));
+            .add_systems(Update, (active_system, put_pic_to_toolbar))
+            .add_systems(
+                Update,
+                (
+                    choose_toolbar,
+                    // choose_by_wheel,
+                    choose_by_key,
+                    update_hand_holder,
+                ),
+            );
     }
 }
 
@@ -43,7 +56,15 @@ pub fn setup_ui(mut commands: Commands, assets: Res<AssetServer>) {
                     node(c_overflow, p, |p| {
                         image(c_inv_slot, p);
                         // 测试两个图片的显示
-                        image(c_test_staff, p);
+                        imagei(
+                            c_test_staff,
+                            //todo 这里仅仅测试显示不同的图片
+                            ToolbarContent {
+                                index: _col,
+                                staff: None,
+                            },
+                            p,
+                        );
                     });
                 });
             });
@@ -61,6 +82,27 @@ pub struct ActiveToolbar {
 #[derive(Debug, Component)]
 pub struct Toolbar {
     pub index: usize,
+}
+
+#[derive(Debug, Component, Clone)]
+pub struct ToolbarContent {
+    pub index: usize,
+    pub staff: Option<Staff>,
+}
+
+// 给toolbar 设置图片
+fn put_pic_to_toolbar(mut query: Query<(&mut BackgroundColor, &mut UiImage, &ToolbarContent)>) {
+    for (mut background_color, mut img, tool_bar) in &mut query {
+        match tool_bar.staff.clone() {
+            Some(staff) => {
+                img.texture = staff.icon;
+                background_color.0 = BackgroundColor::DEFAULT.0;
+            }
+            None => {
+                background_color.0 = Color::rgba(0., 0., 0., 0.);
+            }
+        }
+    }
 }
 
 fn active_system(
@@ -94,6 +136,19 @@ fn choose_by_key(
     add_keyboard_toolbar!(KeyCode::Key7, 6, keyboard_input, active_toolbar);
     add_keyboard_toolbar!(KeyCode::Key8, 7, keyboard_input, active_toolbar);
     add_keyboard_toolbar!(KeyCode::Key9, 8, keyboard_input, active_toolbar);
+    if keyboard_input.just_pressed(KeyCode::Right) {
+        active_toolbar.index += 1;
+        if active_toolbar.index > 8 {
+            active_toolbar.index = 0;
+        }
+    }
+    if keyboard_input.just_pressed(KeyCode::Left) {
+        if active_toolbar.index == 0 {
+            active_toolbar.index = 8;
+        } else {
+            active_toolbar.index -= 1;
+        }
+    }
 }
 
 fn choose_by_wheel(
@@ -127,6 +182,21 @@ fn choose_toolbar(
                 active_toolbar.index = index.clone();
             }
             _ => {}
+        }
+    }
+}
+
+#[derive(Debug, Resource)]
+pub struct HandHolder(pub Option<Staff>);
+
+pub fn update_hand_holder(
+    active_toolbar: Res<ActiveToolbar>,
+    query: Query<&ToolbarContent>,
+    mut hand_holder: ResMut<HandHolder>,
+) {
+    for tool_bar in &query {
+        if (tool_bar.index == active_toolbar.index) {
+            hand_holder.0 = tool_bar.staff.clone();
         }
     }
 }

@@ -17,6 +17,7 @@ use crate::{
     mesh::{gen_mesh, gen_mesh_water, pick_water},
     mesh_generator::MeshManager,
     mesh_material::MaterialStorge,
+    player_ui::HandHolder,
     ray_cast::ChooseCube,
     voxel::Voxel,
     voxel_config::MaterailConfiguration,
@@ -48,9 +49,7 @@ pub fn do_command_tasks(
     mut collider_manager: ResMut<ColliderManager>,
     mut mesh_manager: ResMut<MeshManager>,
     material_config: Res<MaterailConfiguration>,
-    mut materials_assets: ResMut<Assets<StandardMaterial>>,
     mut mesh_assets: ResMut<Assets<Mesh>>,
-    materials: Res<MaterialStorge>,
 ) {
     //FIXME: 首先先分组 同一个chunkMap的数据一起处理合并 后面处理多了再说
     for ele in tasks.tasks.drain(..) {
@@ -127,6 +126,7 @@ pub fn build_or_break(
     mut mouse_button_input: ResMut<Input<MouseButton>>,
     mut choose_cube: ResMut<ChooseCube>,
     mut tasks: ResMut<ChunkCommandsTasks>,
+    hand_holder: Res<HandHolder>,
 ) {
     let pool = AsyncComputeTaskPool::get();
 
@@ -192,17 +192,25 @@ pub fn build_or_break(
     if mouse_button_input.just_pressed(MouseButton::Right) {
         // 这里按下了鼠标右边键
         if let Some(pos) = choose_cube.out_center {
-            // 点转成 chunk_key 和 x, y, z 的方法？
-            let (chunk_key, xyz) = vec3_to_chunk_key_any_xyz(pos);
-            println!("左键点击 要添加的方块是[{:?}][{:?}]", chunk_key, xyz);
-            let task = pool.spawn(async move {
-                ChunkCommands::Change {
-                    chunk_key: chunk_key,
-                    pos: xyz,
-                    voxel_type: Voxel::FILLED,
+            if let Some(staff) = hand_holder.0.clone() {
+                if let Some(voxel_type) = staff.voxel {
+                    let (chunk_key, xyz) = vec3_to_chunk_key_any_xyz(pos);
+                    println!("左键点击 要添加的方块是[{:?}][{:?}]", chunk_key, xyz);
+                    let task = pool.spawn(async move {
+                        ChunkCommands::Change {
+                            chunk_key: chunk_key,
+                            pos: xyz,
+                            voxel_type: voxel_type,
+                        }
+                    });
+                    tasks.tasks.push(task);
+                } else {
+                    println!("当前类型不能放置")
                 }
-            });
-            tasks.tasks.push(task);
+            } else {
+                println!("当前手上没有物品")
+            }
+            // 点转成 chunk_key 和 x, y, z 的方法？
         }
     }
 }

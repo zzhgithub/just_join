@@ -14,6 +14,8 @@ use controller::controller::ControllerFlag;
 use crate::{
     clip_spheres::{ClipSpheres, Sphere3},
     player_controller::PlayerMe,
+    player_ui::ToolbarContent,
+    staff::StaffInfoStroge,
     VIEW_RADIUS,
 };
 
@@ -24,7 +26,8 @@ impl Plugin for ConsoleCommandPlugins {
         app.add_plugins(ConsolePlugin)
             .add_systems(PreUpdate, sync_flags)
             .add_systems(Update, raw_commands.in_set(ConsoleSet::Commands))
-            .add_console_command::<TpCommand, _>(tp_commands::<PlayerMe>);
+            .add_console_command::<TpCommand, _>(tp_commands::<PlayerMe>)
+            .add_console_command::<LoadToolbarCommand, _>(load_toolbar_commands);
     }
 }
 
@@ -79,5 +82,24 @@ fn tp_commands<T>(
         } else {
             log.failed();
         }
+    }
+}
+
+#[derive(Parser, ConsoleCommand)]
+#[command(name = "load_toolbar", about = "load default tool_bar to test")]
+pub struct LoadToolbarCommand;
+
+pub fn load_toolbar_commands(
+    mut load_bar: ConsoleCommand<LoadToolbarCommand>,
+    staff_infos: Res<StaffInfoStroge>,
+    mut query: Query<&mut ToolbarContent>,
+) {
+    if let Some(Ok(LoadToolbarCommand)) = load_bar.take() {
+        for mut tool_bar in &mut query {
+            if let Some(staff) = staff_infos.data.get(&tool_bar.index) {
+                tool_bar.staff = Some(staff.clone());
+            }
+        }
+        load_bar.ok();
     }
 }

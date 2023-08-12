@@ -76,5 +76,6 @@ pub fn c_test_staff(assets: &AssetServer, b: &mut ImageBundle) {
     b.style.left = Val::Px(-64. + 32. - 20.);
     b.style.width = Val::Px(40.);
     b.style.height = Val::Px(40.);
-    b.image = assets.load("textures/002.png").into();
+    b.background_color = Color::rgba(0., 0., 0., 0.).into();
+    // b.image = assets.load("textures/002.png").into();
 }

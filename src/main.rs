@@ -31,6 +31,7 @@ use player_controller::{PlayerControllerPlugin, PlayerMe};
 use player_ui::PlayerUiPlugin;
 use ray_cast::MyRayCastPlugin;
 use sky::SkyPlugin;
+use staff::StaffInfoPlugin;
 use structopt::StructOpt;
 use voxel_config::{MaterailConfiguration, VoxelMaterialToolPulgin};
 // use sky::SkyPlugin;
@@ -51,6 +52,7 @@ mod mesh_material;
 mod palyer;
 mod player_controller;
 mod player_ui;
+mod staff;
 
 mod ray_cast;
 mod sky;
@@ -94,6 +96,7 @@ fn main() {
                 .add_plugins(DefaultPlugins)
                 .add_plugins(ConsoleCommandPlugins)
                 .add_plugins(MaterialPlugin::<BindlessMaterial>::default())
+                .add_plugins(StaffInfoPlugin)
                 // .add_plugins(PlayerPlugin)
                 //FIXME: 这个物品获取又基本无效了 物理引擎不能识别到碰撞了
                 .add_plugins(MyRayCastPlugin)
