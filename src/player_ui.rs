@@ -1,13 +1,23 @@
+use crate::classes::*;
 use bevy::{
+    input::mouse::MouseWheel,
     prelude::{
-        App, AssetServer, Changed, Color, Commands, Component, Plugin, Query, Res, ResMut,
-        Resource, Startup, Update,
+        App, AssetServer, Changed, Color, Commands, Component, EventReader, Events, Input, KeyCode,
+        Plugin, Query, Res, ResMut, Resource, Startup, Update,
     },
     ui::{BorderColor, Interaction, Node},
 };
 use bevy_ui_dsl::*;
+use controller::controller::ControllerFlag;
 
-use crate::classes::*;
+#[macro_export]
+macro_rules! add_keyboard_toolbar {
+    ($key: expr,$value: expr,$class: expr,$change:expr) => {
+        if $class.just_pressed($key) {
+            $change.index = $value;
+        }
+    };
+}
 
 // 用户操作相关的UI
 pub struct PlayerUiPlugin;
@@ -17,7 +27,7 @@ impl Plugin for PlayerUiPlugin {
         app.insert_resource(ActiveToolbar { index: 0 })
             .add_systems(Startup, setup_ui)
             .add_systems(Update, active_system)
-            .add_systems(Update, choose_toolbar);
+            .add_systems(Update, (choose_toolbar, choose_by_wheel, choose_by_key));
     }
 }
 
@@ -30,11 +40,12 @@ pub fn setup_ui(mut commands: Commands, assets: Res<AssetServer>) {
             grid(1, 9, c_grid, p, |p, _row, _col| {
                 // 这里是一个节点 里面 有一个图片
                 buttoni(c_toolbar_box_normal, Toolbar { index: _col }, p, |p| {
-                    image(c_inv_slot, p);
+                    node(c_overflow, p, |p| {
+                        image(c_inv_slot, p);
+                        // 测试两个图片的显示
+                        image(c_test_staff, p);
+                    });
                 });
-                // node(c_toolbar_box_normal, p, |p| {
-                //     imagei(c_inv_slot, , p);
-                // });
             });
         });
     });
@@ -61,6 +72,47 @@ fn active_system(
             *color = Color::RED.into();
         } else {
             *color = Color::rgba(0., 0., 0., 0.).into();
+        }
+    }
+}
+
+fn choose_by_key(
+    controller_flag: Res<ControllerFlag>,
+    keyboard_input: Res<Input<KeyCode>>,
+    mut active_toolbar: ResMut<ActiveToolbar>,
+) {
+    // 如果是不能控制状态禁止控制
+    if (!controller_flag.flag) {
+        return;
+    }
+    add_keyboard_toolbar!(KeyCode::Key1, 0, keyboard_input, active_toolbar);
+    add_keyboard_toolbar!(KeyCode::Key2, 1, keyboard_input, active_toolbar);
+    add_keyboard_toolbar!(KeyCode::Key3, 2, keyboard_input, active_toolbar);
+    add_keyboard_toolbar!(KeyCode::Key4, 3, keyboard_input, active_toolbar);
+    add_keyboard_toolbar!(KeyCode::Key5, 4, keyboard_input, active_toolbar);
+    add_keyboard_toolbar!(KeyCode::Key6, 5, keyboard_input, active_toolbar);
+    add_keyboard_toolbar!(KeyCode::Key7, 6, keyboard_input, active_toolbar);
+    add_keyboard_toolbar!(KeyCode::Key8, 7, keyboard_input, active_toolbar);
+    add_keyboard_toolbar!(KeyCode::Key9, 8, keyboard_input, active_toolbar);
+}
+
+fn choose_by_wheel(
+    mut active_toolbar: ResMut<ActiveToolbar>,
+    mut mouse_wheel_events: EventReader<MouseWheel>,
+) {
+    for event in mouse_wheel_events.iter() {
+        // println!("{:?}", event);
+        if event.y > 0. {
+            active_toolbar.index += 1;
+        } else {
+            if active_toolbar.index == 0 {
+                active_toolbar.index = 8;
+            } else {
+                active_toolbar.index -= 1;
+            }
+        }
+        if active_toolbar.index > 8 {
+            active_toolbar.index = 0;
         }
     }
 }
