@@ -5,7 +5,7 @@ use simdnoise::NoiseBuilder;
 
 use crate::{
     chunk::ChunkKey,
-    voxel::{Grass, Sand, Soli, Sown, Stone, Voxel, VoxelMaterial, Water},
+    voxel::{BasicStone, Grass, Sand, Soli, Sown, Stone, Voxel, VoxelMaterial, Water},
     CHUNK_SIZE, CHUNK_SIZE_U32,
 };
 
@@ -54,7 +54,10 @@ pub fn gen_chunk_data_by_seed(seed: i32, chunk_key: ChunkKey) -> Vec<Voxel> {
                 voxels.push(Sown::into_voxel());
                 continue;
             }
-
+            if (p_y <= -110.) {
+                voxels.push(BasicStone::into_voxel());
+                continue;
+            }
             // // 测试代码只看 截面
             // if p_z < 0. {
             //     voxels.push(Voxel::EMPTY);
@@ -119,7 +122,11 @@ pub fn gen_chunk_data_by_seed(seed: i32, chunk_key: ChunkKey) -> Vec<Voxel> {
         // let [x, y, z] = SampleShape::delinearize(i);
         // let index = SampleShape::linearize([x, z, y]);
         let flag: f32 = noise_3d[i as usize];
-        if flag < 0.05 && flag > -0.05 && voxels[i as usize].id != Water::ID {
+        if flag < 0.05
+            && flag > -0.05
+            && voxels[i as usize].id != Water::ID
+            && voxels[i as usize].id != BasicStone::ID
+        {
             voxels[i as usize] = Voxel::EMPTY;
         }
     }

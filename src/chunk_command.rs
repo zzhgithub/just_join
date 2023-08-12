@@ -1,9 +1,9 @@
 // chunk 修改命令相关
-
 use bevy::{
     prelude::{
-        AlphaMode, Assets, Color, Commands, GlobalTransform, Input, Last, MaterialMeshBundle, Mesh,
-        MouseButton, Plugin, Res, ResMut, Resource, StandardMaterial, Transform, Update, Vec3,
+        warn, AlphaMode, Assets, Color, Commands, GlobalTransform, Input, Last, MaterialMeshBundle,
+        Mesh, MouseButton, Plugin, Res, ResMut, Resource, StandardMaterial, Transform, Update,
+        Vec3,
     },
     tasks::{AsyncComputeTaskPool, Task},
 };
@@ -19,7 +19,7 @@ use crate::{
     mesh_material::MaterialStorge,
     player_ui::HandHolder,
     ray_cast::ChooseCube,
-    voxel::Voxel,
+    voxel::{BasicStone, Voxel, VoxelMaterial},
     voxel_config::MaterailConfiguration,
     CHUNK_SIZE, CHUNK_SIZE_U32,
 };
@@ -67,6 +67,10 @@ pub fn do_command_tasks(
                                 type SampleShape =
                                     ConstShape3u32<CHUNK_SIZE_U32, CHUNK_SIZE_U32, CHUNK_SIZE_U32>;
                                 let index = SampleShape::linearize(pos) as usize;
+                                if voxel[index].id == BasicStone::ID {
+                                    warn!("基岩无法破坏");
+                                    return;
+                                }
                                 voxel[index] = voxel_type;
                                 let mut chunk_key_y0 = chunk_key.clone();
                                 chunk_key_y0.0.y = 0;

@@ -151,6 +151,7 @@ fn choose_by_key(
     }
 }
 
+// FIXME: 使用滚轮时长会导致误触！
 fn choose_by_wheel(
     mut active_toolbar: ResMut<ActiveToolbar>,
     mut mouse_wheel_events: EventReader<MouseWheel>,
